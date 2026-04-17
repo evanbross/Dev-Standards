@@ -1,0 +1,31 @@
+{
+  "enabledPlugins": {
+    "voicemode@voicemode": true,
+    "test-automator@voltagent-subagents": true
+  },
+  "extraKnownMarketplaces": {
+    "voicemode": {
+      "source": {
+        "source": "github",
+        "repo": "mbailey/voicemode"
+      }
+    },
+    "voltagent-subagents": {
+      "source": {
+        "source": "github",
+        "repo": "VoltAgent/awesome-claude-code-subagents"
+      }
+    }
+  },
+  "mcpServers": {
+    "google-calendar": {
+      "command": "npx",
+      "args": ["-y", "@your-mcp-package/google-calendar"],
+      "env": {
+        "YOUR_API_KEY": "REPLACE_WITH_API_KEY"
+      }
+    }
+  },
+  "autoUpdatesChannel": "latest",
+  "voiceEnabled": true
+}
