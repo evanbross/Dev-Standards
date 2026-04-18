@@ -48,6 +48,9 @@ When a method is removed from a service, simultaneously remove every import of t
 **F14. Presigned URL content-type must match actual file**
 When calling an upload presign endpoint, pass the actual file's content type from `file.type`. Never hardcode `"image/jpeg"` for a file input that accepts `image/*`.
 
+**F15. Verify all `@/` import aliases resolve to real files**
+After generating any file that uses `@/lib/`, `@/hooks/`, or `@/components/` imports, confirm the target file exists under `apps/web/src/`. Gemini sometimes imports from `@/lib/api` when the actual file is `@/lib/apiClient`, or references a component under a slightly wrong name. These fail at runtime — not at build time — so they survive TypeScript checks and are only caught when the specific page is visited.
+
 ---
 
 ## Backend — Python / FastAPI / SQLAlchemy
@@ -78,6 +81,18 @@ Registration and creation flows must account for all downstream resource creatio
 
 **B9. Business logic in services, not routers**
 Routers validate input and return responses. All business logic lives in service classes. Routers call service methods — never raw queries directly.
+
+**B10. Never use `datetime.utcnow` in SQLAlchemy column defaults**
+`datetime.utcnow` is deprecated in Python 3.12+ and produces a DeprecationWarning at test time. Always use `lambda: datetime.now(timezone.utc)`:
+
+```python
+# Wrong
+created_at = Column(DateTime, default=datetime.utcnow)
+
+# Right
+from datetime import datetime, timezone
+created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+```
 
 ---
 

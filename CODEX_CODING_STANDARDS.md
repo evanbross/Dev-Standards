@@ -37,6 +37,39 @@ However, always verify this by reading the actual endpoint/method definition. Do
 
 ---
 
+## Broken Import Infrastructure
+
+**C3. Codex writes workaround bootstraps instead of fixing broken imports**
+When the existing codebase has broken `__init__.py` files (e.g. empty when they should re-export submodule symbols), Codex will detect the import failures in its sandbox and work around them by injecting fake modules into `sys.modules` at conftest/test time. The workaround is complex, brittle, and masks a production bug.
+
+**What to look for:** A `conftest.py` or test setup file that contains any of:
+- `sys.modules["app.something"] = ...`
+- `types.ModuleType("app.something")` / `types.SimpleNamespace(...)`
+- Manual attribute assignment like `app_pkg.models = ...` or `app_models_pkg.Recipe = models_module.Recipe`
+
+**How to fix:** These are symptoms of empty `__init__.py` files in the app package. Check every `__init__.py` in the package tree. If a package's public symbols are imported elsewhere as `from package import Symbol`, that `__init__.py` must re-export `Symbol`. Fix the `__init__.py` files, then replace the bootstrap with plain `os.environ` injection before the app imports.
+
+Also watch for `from X.Y import Z` vs `from X import Y; Y.Z` inconsistencies — they reveal whether a module is truly registered in `sys.modules` or just set as an attribute on a parent. If `Y` is set as an attribute of `X` (via `X.__init__.py`) but not registered as `sys.modules['X.Y']`, then `from X.Y import Z` will raise `ModuleNotFoundError` while `from X import Y; Y.Z` works fine.
+
+---
+
+## Environment Variable Completeness
+
+**C4. Cross-reference all env var references against .env.example after generation**
+When Codex generates a new .env.example (or adds env vars to existing code), grep all `import.meta.env.VITE_*` and `process.env.*` references in the app and confirm every one appears in the example file. Codex commonly generates the Sentry-related vars (the ones it just added) but omits pre-existing vars it didn't touch.
+
+```bash
+# Find every VITE_ var referenced in web source:
+grep -rh "import\.meta\.env\.VITE_" apps/web/src/ | grep -o 'VITE_[A-Z_]*' | sort -u
+
+# Find every EXPO_PUBLIC_ var referenced in mobile source:
+grep -rh "process\.env\.EXPO_PUBLIC_" apps/mobile/ | grep -o 'EXPO_PUBLIC_[A-Z_]*' | sort -u
+```
+
+Compare the output against .env.example. Missing vars cause silent failures: maps render blank (VITE_MAPBOX_TOKEN), Stripe initializes as undefined (VITE_STRIPE_PUBLISHABLE_KEY), API calls go to wrong host (VITE_API_URL).
+
+---
+
 ## Comparison vs. Gemini
 
 | Dimension | Codex | Gemini |
