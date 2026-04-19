@@ -48,6 +48,9 @@ When a method is removed from a service, simultaneously remove every import of t
 **F14. Presigned URL content-type must match actual file**
 When calling an upload presign endpoint, pass the actual file's content type from `file.type`. Never hardcode `"image/jpeg"` for a file input that accepts `image/*`.
 
+**F16. All hooks must appear before any early return**
+Never place a `useState`, `useEffect`, `useMemo`, `useCallback`, or any other hook after a conditional `return`. React requires hooks to be called in the same order on every render; an early return that skips a hook causes a "Rendered fewer hooks than expected" crash on route change. Move all hook calls to the top of the component, before any guard clauses.
+
 **F15. Verify all `@/` import aliases resolve to real files**
 After generating any file that uses `@/lib/`, `@/hooks/`, or `@/components/` imports, confirm the target file exists under `apps/web/src/`. Gemini sometimes imports from `@/lib/api` when the actual file is `@/lib/apiClient`, or references a component under a slightly wrong name. These fail at runtime — not at build time — so they survive TypeScript checks and are only caught when the specific page is visited.
 
