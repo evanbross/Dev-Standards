@@ -98,6 +98,18 @@ Proactively suggest a `/clear` or `/compact` when the conversation is getting lo
 
 Mention it briefly at the end of a response: e.g., "This is a good point to `/clear` before continuing with Step 4."
 
+## pywin32 Windows Services
+
+When writing a `win32serviceutil.ServiceFramework` subclass, `SvcDoRun` must call `self.ReportServiceStatus(win32service.SERVICE_RUNNING)` as its **first line** — before any config loading, logging setup, or other initialization. The SCM will kill the process if it doesn't receive this acknowledgement within ~30 seconds, producing "The service did not respond to the start or control request in a timely fashion."
+
+Also: always install pywin32 services using the venv Python directly (`.venv\Scripts\python.exe ddns_service.py install`), never via `uv run python`. The `uv run` wrapper causes the SCM to register the wrong executable path.
+
+Also: the SCM does not add the script's directory to `sys.path` when launching a service. Any service module that imports local files must explicitly add its own directory at the very top of the file, before any local imports: `sys.path.insert(0, str(Path(__file__).resolve().parent))`. Without this, the import fails silently with no Event Log entry.
+
+## NSSM Windows Services
+
+When configuring NSSM (`nssm install` / `nssm set Application`), always use **absolute paths** for both the executable and the script. The SCM has no working directory context, so relative paths like `.venv\Scripts\python.exe` will fail with "The system cannot find the file specified."
+
 ## Environment
 
 - Platform: Windows 10
