@@ -1,5 +1,9 @@
 # Codex Coding Standards
 
+**Read `COMMON_CODING_STANDARDS.md` first.** All rules there apply to every Codex task.
+This file contains Codex-specific behavior rules, project-specific overrides, and
+observed Codex failure modes.
+
 Include the rules in this file verbatim at the top of every Codex prompt.
 Rules are grouped by area. Each rule has a short code (e.g. `B3`) for easy reference in review notes.
 Numbers are stable references — do not renumber when adding.
@@ -10,14 +14,16 @@ Numbers are stable references — do not renumber when adding.
 
 | # | Rule |
 |---|---|
-| G1 | **No speculative abstractions** — implement exactly what the plan specifies, nothing more. Do not design for hypothetical future requirements. |
-| G2 | **No bare `pass` in stubs** — always `raise NotImplementedError("not yet implemented")`. A stub that raises fails loudly; a `pass` silently does nothing. |
-| G3 | **No `__import__()`** — add all imports at the top of the file. Dynamic imports inside expressions are never acceptable. |
-| G4 | **No dead branches** — no `if False:`, `if True:`, unreachable arms, or commented-out alternatives. Pick one approach and commit to it. |
-| G5 | **All imports must be used** — no unused imports anywhere. |
+| G0 | **Ask once before editing files** — after the user gives a task or question that may require code or file changes, ask a single confirmation such as "Is it ok for me to start editing files?" Do not begin edits before that confirmation. Once the user approves, continue through the needed edits without asking again for each file, folder, or routine access step unless there is unusual risk or a real blocker. |
+| G1 | → **COMMON_CODING_STANDARDS.md** (no speculative abstractions) |
+| G2 | → **COMMON_CODING_STANDARDS.md** (no bare `pass` in stubs) |
+| G3 | → **COMMON_CODING_STANDARDS.md** (no `__import__()`) |
+| G4 | → **COMMON_CODING_STANDARDS.md** (no dead branches) |
+| G5 | → **COMMON_CODING_STANDARDS.md** (all imports must be used) |
 | G6 | **Follow the file layout in the plan exactly** — no extra directories, no parallel implementations, no bonus files. |
-| G7 | **Account for all downstream resource creation** — when a new entity is created (e.g. a `CUSTOMER` User), create all required related rows (e.g. `CustomerProfile`) in the same transaction. Never silently omit them. |
-| G8 | **When a new third-party package is imported, add it to the manifest** — `apps/api/requirements.txt` for Python, `apps/web/package.json` or `apps/mobile/package.json` for Node. Check for extras too (`pydantic[email]` ≠ `pydantic`). |
+| G7 | → **COMMON_CODING_STANDARDS.md** (downstream resource creation) |
+| G8 | → **COMMON_CODING_STANDARDS.md** (dependency tracking) |
+| G9 | → **COMMON_CODING_STANDARDS.md** (no name shadowing) |
 
 ---
 
@@ -25,16 +31,17 @@ Numbers are stable references — do not renumber when adding.
 
 | # | Rule |
 |---|---|
-| B1 | **SQLAlchemy 2.x style throughout** — always use `Mapped` / `mapped_column`. Never use legacy `Column()` style. |
-| B2 | **SQLAlchemy 2.x count pattern** — `select(func.count()).select_from(q.subquery())`. Never `.with_only_columns(func.count())` on a filtered query — that is a 1.x pattern that breaks in 2.x. |
-| B3 | **All new FastAPI routes must be fully typed** — every `@router.<method>` needs `response_model=<PydanticModel>`, a typed Pydantic request body (never `body: dict`), and the correct `status_code` (e.g. 201 for resource creation). |
-| B4 | **Router `tags` must be set** — set `tags=[...]` on each `APIRouter`, not per-route. |
-| B5 | **Never import from the app entry point in routers** — shared infrastructure (limiter, DB session, config) belongs in `app/core/`, not imported from `app/main`. |
-| B6 | **Never access model attributes not defined in the model** — check `Mapped` columns before referencing them anywhere. |
+| B1 | → **COMMON_CODING_STANDARDS.md** (SQLAlchemy 2.x — `Mapped` / `mapped_column`) |
+| B2 | → **COMMON_CODING_STANDARDS.md** (SQLAlchemy 2.x count pattern) |
+| B3 | → **COMMON_CODING_STANDARDS.md** (FastAPI routes fully typed) |
+| B4 | → **COMMON_CODING_STANDARDS.md** (Router `tags`) |
+| B5 | → **COMMON_CODING_STANDARDS.md** (never import from app entry point in routers) |
+| B6 | **Never access model attributes not defined in the model** — check `Mapped` columns before referencing them anywhere. Referencing a field that doesn't exist as a mapped column raises `AttributeError` at runtime with no compile-time warning. |
 | B7 | **Async throughout the API** — `async def` routes, async SQLAlchemy sessions, async Redis calls. No sync blocking calls inside async functions. |
-| B8 | **Business logic lives in `services/`** — routers call service methods; services never contain raw SQL; raw queries never appear in routers. |
-| B9 | **Upsert race condition** — any SELECT-then-INSERT upsert pattern must wrap the INSERT in `try/except IntegrityError`, roll back, and re-fetch. Never assume the SELECT-empty → INSERT path is race-free. |
-| B10 | **Consistent field validation normalization** — if one field validator normalizes input (e.g. uppercasing `home_type`), apply the same normalization to all similar fields in the same schema (e.g. uppercasing `pet_types`). Asymmetric validators are silent footguns. |
+| B8 | → **COMMON_CODING_STANDARDS.md** (business logic layering — routers call services, never raw queries) |
+| B9 | → **COMMON_CODING_STANDARDS.md** (upsert race condition) |
+| B10 | → **COMMON_CODING_STANDARDS.md** (consistent validation normalization) |
+| B11 | → **COMMON_CODING_STANDARDS.md** (type hints when touching code) |
 
 ---
 
@@ -42,10 +49,10 @@ Numbers are stable references — do not renumber when adding.
 
 | # | Rule |
 |---|---|
-| D1 | **`down_revision` must point to the current head** — verify the chain before running. |
-| D2 | **JSONB columns need `server_default='[]'`** — always set a server default on nullable JSONB arrays so existing rows are not NULL after migration. |
-| D3 | **No spatial index in Alembic for GeoAlchemy2 columns** — GeoAlchemy2 auto-creates a GIST index; adding one in the migration causes `DuplicateTable`. Remove any autogenerated `create_index` for geography/geometry columns. |
-| D4 | **Backfill new per-entity tables** — when adding a table that must have one row per existing entity (e.g. one `CustomerProfile` per `CUSTOMER` User), include a backfill `INSERT ... ON CONFLICT DO NOTHING` in `upgrade()` immediately after `create_table`. |
+| D1 | → **COMMON_CODING_STANDARDS.md** (Alembic `down_revision` must point to current head) |
+| D2 | → **COMMON_CODING_STANDARDS.md** (JSONB columns need `server_default='[]'`) |
+| D3 | → **COMMON_CODING_STANDARDS.md** (no spatial index in Alembic for GeoAlchemy2 columns) |
+| D4 | → **COMMON_CODING_STANDARDS.md** (backfill new per-entity tables) |
 
 ---
 
@@ -53,21 +60,21 @@ Numbers are stable references — do not renumber when adding.
 
 | # | Rule |
 |---|---|
-| F1 | **Strict TypeScript** — no `any` types, no `// @ts-ignore`. |
-| F2 | **Shared types only** — never redeclare API response types or request/update body shapes locally. All shared types (responses AND update bodies) belong in `packages/types` and must be imported from `@mysitter/types`. |
+| F1 | → **COMMON_CODING_STANDARDS.md** (strict TypeScript — no `any`, no `// @ts-ignore`) |
+| F2 | **Shared types only** — never redeclare API response types or request/update body shapes locally. All shared types belong in `packages/types` and must be imported from `@mysitter/types`. |
 | F3 | **TanStack Query for all server state** — no manual `useEffect` data fetching. |
 | F4 | **Components own UI only** — data fetching goes in custom hooks under `hooks/`. Components call hooks; they do not call `apiClient` directly. |
 | F5 | **Always use the `@/` alias in `apps/web`** — configured in `tsconfig.json` and `vite.config.ts`. Never use relative `../../` paths in web. |
 | F6 | **`enabled` guard on conditional queries** — any `useQuery` that is only valid for a specific role or state must pass `enabled: <boolean>`. Never fire unconditionally. |
 | F7 | **QueryClientProvider placement** — never call hooks in the same component that renders `QueryClientProvider`. Split into an outer provider component and an inner consumer. |
-| F8 | **StrictMode double-invoke guard** — a `useEffect` that calls a mutating API must be guarded with `useRef(false)`. React 18 double-invokes effects in development. |
-| F9 | **No stub `onClick` / `onPress`** — every handler must be implemented. Disable or remove buttons whose action is not yet ready. |
-| F10 | **Match JSX opening/closing tag casing exactly** — triple-check casing on all closing tags. |
+| F8 | → **COMMON_CODING_STANDARDS.md** (StrictMode double-invoke guard) |
+| F9 | → **COMMON_CODING_STANDARDS.md** (no stub `onClick` / `onPress`) |
+| F10 | → **COMMON_CODING_STANDARDS.md** (JSX opening/closing tag casing) |
 | F11 | **ApiClient namespaces are object-literal class properties** — not methods. |
-| F12 | **Object params, not positional** — always match the TypeScript function signature. |
+| F12 | **Object params, not positional** — always match the TypeScript function signature. Pass named parameter objects — never positional arguments that happen to fit by accident. |
 | F13 | **Viewport height on routes that hide the NavBar** — auth pages (`/login`, `/register`) hide the NavBar. Use `min-h-screen`, not `min-h-[calc(100vh-4rem)]`. |
-| F14 | **Never render portals or notification providers inside an `ErrorBoundary`** — `<Toaster />`, modal roots, and similar portals must be siblings outside the `ErrorBoundary` so they survive app crashes. |
-| F15 | **All hooks must appear before any early return** — never place a `useState`, `useEffect`, `useMemo`, `useCallback`, or any other hook after a conditional `return`. React requires hooks to be called in the same order every render; an early return that skips a hook causes "Rendered fewer hooks than expected" on route change. |
+| F14 | → **COMMON_CODING_STANDARDS.md** (no portals or notification providers inside `ErrorBoundary`) |
+| F15 | → **COMMON_CODING_STANDARDS.md** (all hooks must appear before any early return) |
 
 ---
 
@@ -85,9 +92,9 @@ Numbers are stable references — do not renumber when adding.
 
 | # | Rule |
 |---|---|
-| T1 | **Test fixtures must match endpoint `response_model`** — verify every field read in a test actually exists in the Pydantic response schema. |
-| T2 | **Never mock the database in integration tests** — tests must run against a real PostgreSQL + PostGIS instance. Mocked DB tests pass when real migrations fail. |
-| T3 | **Tests must work against a fresh schema** — do not seed the test DB inside Codex's sandbox and leave it hardcoded. Use fixtures and `conftest.py`. |
+| T1 | → **COMMON_CODING_STANDARDS.md** (test fixtures must match endpoint `response_model`) |
+| T2 | → **COMMON_CODING_STANDARDS.md** (never mock the database in integration tests) |
+| T3 | → **COMMON_CODING_STANDARDS.md** (tests must work against a fresh schema) |
 
 ---
 
@@ -96,7 +103,7 @@ Numbers are stable references — do not renumber when adding.
 | # | Rule |
 |---|---|
 | I1 | **This project uses GitLab CI** — all pipeline config goes in `.gitlab-ci.yml`. Never create `.github/workflows/`. |
-| I2 | **Include all required system dependencies in Dockerfiles** — spatial support requires `gdal-bin`, `libpq-dev`, `libgdal-dev`. Do not assume a base image has them. |
+| I2 | → **COMMON_CODING_STANDARDS.md** (include all system dependencies in Dockerfiles) |
 
 ---
 
