@@ -16,6 +16,12 @@ Aim for a mid-ground level of explanation. Don't be terse — explain *why* deci
 - Don't add speculative abstractions — solve the problem at hand, not hypothetical future ones
 - Prefer editing existing files over creating new ones
 
+## Session Startup
+
+At the start of every conversation, re-read the standards files listed in the project's agent config (e.g. `AGENTS.md`) before making changes. This CLAUDE.md is auto-loaded by the system, but the component standards files (`PYTHON_STANDARDS.md`, `REACT_STANDARDS.md`, etc.) are not — rules may have been added to them since the last session.
+
+**MySitter project profile:** `COMMON_CODING_STANDARDS.md`, `PYTHON_STANDARDS.md`, `FASTAPI_STANDARDS.md`, `DATABASE_STANDARDS.md`, `REACT_STANDARDS.md`, `TESTING_STANDARDS.md`, `INFRASTRUCTURE_STANDARDS.md`
+
 ## Code Review
 
 After writing or modifying code, proactively flag any violations of the best practices defined below. Don't wait to be asked — a brief "a few things worth noting:" section at the end of a response is appropriate.

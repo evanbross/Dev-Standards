@@ -1,0 +1,5 @@
+I need to do a lot of python and java programming in the near future.
+I want to be using an AI coding assistant in a jetbrains IDE environment.
+It'll need to produce solid, bug-free code, be able to do in depth code reviews, and do reasonable front end design.
+How about using multiple AIs to break down architecture, phase planning, code generation, frontend, code review.
+The ones i've used are Claude, jetbrains junie, Qwen, Copilot, gemini, and openai codex, but I'm open to trying new ones.
