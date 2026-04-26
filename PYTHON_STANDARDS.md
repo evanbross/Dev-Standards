@@ -59,6 +59,39 @@ catch `(urllib.error.URLError, TimeoutError, socket.error, json.JSONDecodeError,
 
 ---
 
+## Service Layer Exception Handling — Log and Re-raise
+
+Service and repository methods that call external infrastructure (APIs, databases, file
+systems) should catch the expected infrastructure exception, log diagnostic context, and
+re-raise. They must not swallow the exception or decide the HTTP response code — that
+belongs to the route handler.
+
+```python
+# In a service/repository method:
+try:
+    result = external_client.call(...)
+except SomeInfrastructureError as exc:
+    logger.warning("Context about what was being attempted: %s", exc)
+    raise  # re-raise unchanged; route handler decides the response
+
+# In the route handler:
+try:
+    data = service.do_thing()
+except NotAuthenticatedError:
+    return jsonify({"error": "Not authenticated"}), 401
+except SomeInfrastructureError:
+    return jsonify({"error": "External service error"}), 502
+except Exception as exc:
+    logger.warning("Unexpected error: %s", exc)
+    return jsonify({"error": "Unexpected error"}), 500
+```
+
+Never return raw `str(exc)` to the client from a generic handler — it may expose
+connection strings, internal paths, or other implementation details. Log the full
+exception server-side and return a sanitized message.
+
+---
+
 ## Stub Implementations
 
 Never use bare `pass` for stub implementations — always use
