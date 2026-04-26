@@ -14,11 +14,44 @@ After writing or modifying code, proactively flag any violations of the best pra
 
 ## Project CLAUDE.md Propagation
 
-When starting work in any project that has a `CLAUDE.md` file, check whether it contains each of the following sections. If any are missing, add them before doing any other work.
+When starting work in any project that has a `CLAUDE.md` file, check whether it references
+the appropriate standards files from `../Dev-Standards/` via `@` includes. If any are
+missing for the project's stack, add them before doing other work.
 
-Sections that must be present in every project CLAUDE.md:
-- **Best Practices** — language/framework rules, SOLID, secure coding, idiomatic patterns
-- **Database Abstraction** — repository pattern, dependency-injected sessions, no provider leakage, abstract base/Protocol per repository
+The pattern for every project `CLAUDE.md` is a list of `@` includes:
+
+```
+@../Dev-Standards/COMMON_CODING_STANDARDS.md
+@../Dev-Standards/PYTHON_STANDARDS.md
+...
+```
+
+### Always include
+- `COMMON_CODING_STANDARDS.md` — universal rules; every project needs this
+
+### Include when the stack applies
+
+| File | When to include |
+|------|-----------------|
+| `PYTHON_STANDARDS.md` | Any Python code in the project |
+| `DATABASE_STANDARDS.md` | Any project with a database (SQL, Redis, etc.) |
+| `REACT_STANDARDS.md` | React or React Native frontend |
+| `FASTAPI_STANDARDS.md` | FastAPI projects (alongside `PYTHON_STANDARDS.md`) |
+| `TESTING_STANDARDS.md` | Any project with automated tests |
+| `INFRASTRUCTURE_STANDARDS.md` | Projects with Docker, CI/CD pipelines, or deployment config |
+| `GOOGLE_CODING_STANDARDS.md` | Any use of Google Sheets, Drive, Gmail, Calendar, or Workspace APIs |
+| `WINDOWS_STANDARDS.md` | Windows-specific tooling or PowerShell automation |
+| `JAVA_CODING_STANDARDS.md` | Java projects |
+
+### Removing stale references
+If a standards file is referenced but no longer applies to the project (e.g. the project
+dropped its React frontend, or removed all Google API usage), remove the `@` include.
+Stale references waste context and can produce irrelevant lint feedback.
+
+### Do not include in CLAUDE.md
+AI-agent-specific files (`CODEX_CODING_STANDARDS.md`, `GEMINI_CODING_STANDARDS.md`,
+`QWEN_CODING_STANDARDS.md`) belong in the project's `AGENTS.md`, not `CLAUDE.md`.
+Each agent file is written for that agent's quirks and is not useful context for Claude.
 
 ## Code Generation Behavior
 

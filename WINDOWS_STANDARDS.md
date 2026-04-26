@@ -4,6 +4,34 @@ Rules for Windows service development and system automation. Read `COMMON_CODING
 
 ---
 
+## Line Endings
+
+Windows projects must use CRLF (`\r\n`) line endings for all text files. Configure this
+in `.gitattributes` at the repo root so it is enforced for every contributor regardless
+of their editor settings:
+
+```
+* text=auto eol=crlf
+```
+
+Set the matching Git config so the working copy always checks out CRLF:
+
+```
+git config core.autocrlf true
+```
+
+If a file has been committed with LF endings, normalize it with:
+
+```
+git add --renormalize .
+```
+
+Never commit files with mixed line endings — they produce noisy diffs and can break
+Windows-only tooling (batch scripts, PowerShell scripts, SCM-invoked executables) that
+parse line endings literally.
+
+---
+
 ## pywin32 Windows Services
 
 When writing a `win32serviceutil.ServiceFramework` subclass, `SvcDoRun` must call

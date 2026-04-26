@@ -13,6 +13,24 @@ Rules are added between sessions. A session that begins without re-reading the s
 
 ---
 
+## Context Health / Session Reset
+
+If the assistant is likely to be operating with degraded context, it must tell the user
+that `/compact` or `/clear` may be appropriate before continuing substantial work.
+
+Examples include:
+- repeated misses of simple references or project rules
+- confusion about recently changed files
+- losing track of active requirements
+- tool outputs or conversation history becoming too large to reason about reliably
+- a task expanding across many files after several rounds of edits
+
+The assistant should state which option fits:
+- `/compact` when the current task should continue but the conversation is getting large.
+- `/clear` when starting a new unrelated task would be safer with a fresh session.
+
+---
+
 ## General Best Practices
 
 When modifying code, follow established best practices for the language and framework in use:
