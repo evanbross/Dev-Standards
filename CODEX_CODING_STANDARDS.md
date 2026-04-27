@@ -106,6 +106,15 @@ grep -rh "import\.meta\.env\.VITE_" apps/web/src/ | grep -o 'VITE_[A-Z_]*' | sor
 grep -rh "process\.env\.EXPO_PUBLIC_" apps/mobile/ | grep -o 'EXPO_PUBLIC_[A-Z_]*' | sort -u
 ```
 
+**C5. Retry standards file reads with resolved absolute paths**
+If a standards file listed in `AGENTS.md` fails to read via a relative path, do not
+immediately report it missing. First run `Resolve-Path` / `realpath` from the project
+root and retry reading the resolved absolute path. Only report the file missing if both
+the relative read and resolved-path read fail.
+
+This guards against sandbox path translation issues where paths such as
+`../Dev-Standards/...` may be incorrectly resolved outside the actual project tree.
+
 ---
 
 ## Known Codex Risk Patterns (Review Checklist)
