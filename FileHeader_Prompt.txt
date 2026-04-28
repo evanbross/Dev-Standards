@@ -1,8 +1,12 @@
 Add the copyright header to all source files in this project using the following rules:
 
-.java files — use ..\Dev-Standards\FileHeader_java.txt, placed above the package statement
-.js, .ts, and .css files — use ..\Dev-Standards\FileHeader_js.txt, placed at the very top of the file
-.py files — use ..\Dev-Standards\FileHeader_python.txt; if the file begins with a shebang line (#!/usr/bin/env python3 or similar), keep the shebang as line 1 and place the header immediately after it; otherwise place it at the very top
-.html files — use ..\Dev-Standards\FileHeader_html.txt, placed above <!DOCTYPE html>
+  - .java files — use ..\Dev-Standards\FileHeader_java.txt, placed above the package statement
+  - .js, .ts, and .css files — use ..\Dev-Standards\FileHeader_js.txt, placed at the very top of the file
+  - .py files — use ..\Dev-Standards\FileHeader_python.txt; if the file begins with a shebang line
+    (#!/usr/bin/env python3 or similar), keep the shebang as line 1 and place the header immediately
+    after it; otherwise place it at the very top
+  - .html files — use ..\Dev-Standards\FileHeader_html.txt, placed above <!DOCTYPE html>
+  - .md files — use ..\Dev-Standards\FileHeader_md.txt, placed at the very top of the file
 
-If a file already has a comment block at the top, replace it with the appropriate header rather than adding a second one. Do not modify any other content in any file.
+If a file already has a comment block at the top, replace it with the appropriate header rather than
+adding a second one. Do not modify any other content in any file.

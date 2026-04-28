@@ -59,6 +59,8 @@ These are Claude-specific behavioral rules that go beyond what's in the coding s
 
 - **When generating multiple files in one session** — pause between files and flag uncertainty rather than patching in place. A `# TODO: verify this pattern` comment is better than a working-looking hack.
 
+- **No `#` comments inside quoted Bash `-c` strings** — a newline followed by `#` inside a quoted argument triggers Claude Code's path-validation warning ("Newline followed by # inside a quoted argument can hide arguments from path validation"). Never put comment lines inside `python -c "..."` or similar inline scripts. If the script needs comments or is longer than ~2 lines, write it to a temp file and run that instead.
+
 ## Context Window Management
 
 Proactively suggest a `/clear` or `/compact` when the conversation is getting long — specifically:

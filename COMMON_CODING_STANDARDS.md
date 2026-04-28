@@ -46,6 +46,32 @@ When modifying code, follow established best practices for the language and fram
 
 ---
 
+## Logging Format
+
+Always configure the logging format to include **filename and line number** alongside the timestamp, level, and logger name. This is the single highest-value change for debugging — a stack trace tells you what crashed, but the log line tells you what was happening right before it.
+
+**Python**
+```python
+logging.basicConfig(
+    format="%(asctime)s [%(levelname)s] %(name)s (%(filename)s:%(lineno)d): %(message)s"
+)
+```
+
+**Node / TypeScript** (Winston example)
+```typescript
+format: winston.format.printf(({ level, message, timestamp, filename, line }) =>
+  `${timestamp} [${level}] (${filename}:${line}): ${message}`)
+```
+
+**Java** (Logback `logback.xml`)
+```xml
+<pattern>%d{HH:mm:ss} [%-5level] %logger{36} (%file:%line): %msg%n</pattern>
+```
+
+Use the bare filename (`%(filename)s` in Python, `%file` in Logback), not the full path — it keeps lines readable without losing the critical "where" context.
+
+---
+
 ## Dependency Tracking
 
 When a new third-party package (or package extra) is first imported in a project, verify it is listed in the project's dependency manifest and add it if missing:

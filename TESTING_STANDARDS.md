@@ -4,6 +4,20 @@ Rules for writing and maintaining automated tests. Read `COMMON_CODING_STANDARDS
 
 ---
 
+## Test Framework — Always Use pytest
+
+Use **pytest** for all Python tests. Do not use `unittest` or its `TestCase` classes.
+
+- Test functions, not classes: `def test_something():` not `class TestSomething(unittest.TestCase):`
+- Plain `assert` statements: `assert result == 42` not `self.assertEqual(result, 42)`
+- Exception assertions: `pytest.raises(ValueError, match="...")` not `assertRaisesRegex`
+- Mocks: `unittest.mock.patch` is fine — it works with pytest and there is no need to replace it
+- No `if __name__ == "__main__": unittest.main()` block
+
+`unittest`-style tests in the codebase are technical debt. Convert them to pytest when you touch the file.
+
+---
+
 ## No Mocked Databases in Integration Tests
 
 Integration tests must run against a real database instance, not mocks. A test suite that

@@ -36,6 +36,7 @@ Rules are numbered for stable reference in review notes. Do not renumber when ad
 |---|---|
 | B1 | **Async throughout the API** — `async def` routes, async SQLAlchemy sessions, async Redis calls. No sync blocking calls inside async functions. |
 | B2 | **Never access model attributes not defined in the model** — check `Mapped` columns before referencing them anywhere. Referencing a field that doesn't exist raises `AttributeError` at runtime with no compile-time warning. |
+| B3 | **Use pytest for Python tests** — write new Python tests as pytest-style test functions and fixtures. Do not introduce `unittest.TestCase` or `unittest.main()` unless modifying an existing unittest-only file and converting it is out of scope. |
 
 ---
 
