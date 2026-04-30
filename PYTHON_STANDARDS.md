@@ -24,6 +24,14 @@ A dynamic import inside an expression is a sign something went wrong; stop and r
 
 All imports must be used. Remove any import that is not referenced in the file body.
 
+Never import a name that begins with `_` from another module. The leading underscore
+signals that the name is private to its defining module — importing it from outside
+bypasses that boundary and creates an invisible dependency. If you find yourself needing
+to write `from some_module import _helper`, the fix is one of:
+
+- Remove the underscore to make it public (if it genuinely belongs to the module's API).
+- Move it to a shared utility module imported by both callers.
+
 ---
 
 ## Name Shadowing
