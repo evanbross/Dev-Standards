@@ -79,3 +79,17 @@ When a new third-party package (or package extra) is first imported in a project
 - **Python**: `requirements.txt`, `pyproject.toml [project.dependencies]`, or both. Check extras too — `pydantic[email]` and `pydantic` are not the same entry.
 - **Node**: `package.json` `dependencies` (runtime) or `devDependencies` (tooling/test-only). Do not add runtime packages under `devDependencies`.
 - **Dev-only packages**: keep in a separate manifest (`requirements-dev.txt`, `devDependencies`) so they do not bloat production installs.
+
+---
+
+## File Headers
+
+Every new source file must begin with the copyright/license header for its language. Copy the appropriate template verbatim as the first block of the file — do not paraphrase or abbreviate it.
+
+| Language                | Template                        |
+|-------------------------|---------------------------------|
+| Python                  | `Headers/FileHeader_Python.txt` |
+| JavaScript / TypeScript | `Headers/FileHeader_JS.txt`     |
+| Java                    | `Headers/FileHeader_Java.txt`   |
+| HTML                    | `Headers/FileHeader_HTML.txt`   |
+| AI prompts              | `Headers/FileHeader_Prompt.txt` |
