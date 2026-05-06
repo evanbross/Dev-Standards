@@ -35,7 +35,7 @@ Each AI assistant has its own file that lists which standards apply and adds AI-
 |------|----------|
 | `CLAUDE.md` | Claude Code preferences, response style, project profiles |
 | `CODEX_CODING_STANDARDS.md` | Codex behavior rules, observed failure modes, risk checklist |
-| `GEMINI_CODING_STANDARDS.md` | Gemini behavior rules, observed failure modes |
+| `GEMINI_SESSION_STANDARDS.md` | Gemini behavior rules, observed failure modes |
 | `QWEN_CODING_STANDARDS.md` | Qwen behavior rules (failure modes added as observed) |
 
 ---
@@ -45,7 +45,7 @@ Each AI assistant has its own file that lists which standards apply and adds AI-
 Each project's `AGENTS.md` (or equivalent agent config) lists which standards files apply.
 This keeps AI prompts focused — a Python-only backend doesn't load React rules.
 
-**Example — MySitter (full-stack):**
+**Example — Full-stack app:**
 ```
 COMMON_CODING_STANDARDS.md
 PYTHON_STANDARDS.md

@@ -5,7 +5,7 @@
 At the start of every session, re-read this file and every standards file listed in the
 project's agent config before making any changes.
 
-**MySitter project profile:**
+**Example project profile:**
 - `COMMON_CODING_STANDARDS.md`
 - `PYTHON_STANDARDS.md`
 - `FASTAPI_STANDARDS.md`

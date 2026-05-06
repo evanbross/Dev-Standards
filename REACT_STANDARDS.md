@@ -25,6 +25,25 @@ any guard clauses.
 
 ---
 
+## Derived Values Must Be Declared After Their Dependencies
+
+`const` declarations are not hoisted with a value — referencing a `const` before its
+declaration line throws `ReferenceError: Cannot access 'X' before initialization` (the
+temporal dead zone). This shows up as a cryptic minified-variable error in production
+builds (e.g. `Cannot access 'm' before initialization`).
+
+Always declare computed values after all the variables they depend on:
+
+```jsx
+// Wrong — loginInProgress references running before running is declared:
+const loginInProgress = running && status?.message?.includes("...");
+const running = !!status?.running;
+
+// Correct — running is declared first:
+const running = !!status?.running;
+const loginInProgress = running && status?.message?.includes("...");
+```
+
 ## No Stub Event Handlers
 
 Every `onClick` / `onPress` handler must be fully implemented. If a feature is not ready,

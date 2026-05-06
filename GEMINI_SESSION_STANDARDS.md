@@ -5,15 +5,6 @@
 At the start of every session, re-read this file and every standards file listed in the
 project's agent config before making any changes.
 
-**MySitter project profile:**
-- `COMMON_CODING_STANDARDS.md`
-- `PYTHON_STANDARDS.md`
-- `FASTAPI_STANDARDS.md`
-- `DATABASE_STANDARDS.md`
-- `REACT_STANDARDS.md`
-- `TESTING_STANDARDS.md`
-- `INFRASTRUCTURE_STANDARDS.md`
-
 ---
 
 ## General Behavior Rules
@@ -33,9 +24,9 @@ Gemini-specific failure modes observed on this stack. The base rules are in `REA
 
 **F1. Verify all `@/` import aliases resolve to real files**
 After generating any file that uses `@/lib/`, `@/hooks/`, or `@/components/` imports,
-confirm the target file exists under `apps/web/src/`. Gemini sometimes imports from
-`@/lib/api` when the actual file is `@/lib/apiClient`, or references a component under
-a slightly wrong name. These fail at runtime — not at build time.
+confirm the target file exists under the project's source directory (e.g. `apps/web/src/` or `src/`).
+Gemini sometimes imports from `@/lib/api` when the actual file is `@/lib/apiClient`, or
+references a component under a slightly wrong name. These fail at runtime — not at build time.
 
 **F2. Presigned URL content-type must match actual file**
 When calling an upload presign endpoint, pass the actual file's content type from
@@ -80,5 +71,6 @@ created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 ## Infrastructure / CI
 
 **I1. Use the correct CI platform**
-Check which platform the project uses. GitLab → `.gitlab-ci.yml`. GitHub → `.github/workflows/*.yml`.
-The MySitter project uses **GitLab CI**.
+Check which platform the project uses before generating pipeline config. GitLab uses
+`.gitlab-ci.yml`, while GitHub uses `.github/workflows/*.yml`. Networking and syntax
+differ significantly between them.
