@@ -48,6 +48,7 @@ configured and resolve to real files.
 | F7 | Match TypeScript function signatures; use object params where declared. |
 | F8 | Auth pages that hide the NavBar should use `min-h-screen`, not `min-h-[calc(100vh-4rem)]`. |
 | F9 | After frontend refactors, grep for unused style constants, helper functions, and duplicate old local helper definitions. Vite/build output may not catch dead code or drift-prone duplication without linting. |
+| F10 | After moving/removing/extracting React constants, helpers, style objects, or render functions, grep touched JSX for the moved names and related patterns such as `*Style`, `format*`, `render*`, and `*Label`; plain JavaScript Vite builds may not catch `ReferenceError` crashes in conditional render branches. |
 
 ## Mobile Checks
 

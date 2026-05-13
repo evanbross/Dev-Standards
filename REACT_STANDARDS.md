@@ -135,6 +135,22 @@ labels, URL normalizers, and parser regexes can silently diverge across panels.
 
 ---
 
+## Refactor Undefined Identifier Checks
+
+After moving, removing, or extracting React component-local constants, helpers, style
+objects, or render functions, grep the touched component for the moved identifier names
+and for related naming patterns such as `*Style`, `format*`, `render*`, and `*Label`.
+Every JSX reference must still resolve in the same module scope or through an explicit
+import.
+
+Do not rely on a Vite production build alone to catch this. Plain JavaScript React
+projects can build successfully while a conditional render path still throws
+`ReferenceError: <name> is not defined` only when that branch is opened. If the project
+does not have ESLint or TypeScript `no-undef` coverage, manually inspect the touched JSX
+branches and run the closest available grep/check before finalizing.
+
+---
+
 ## Write Calls Must Check `res.ok`
 
 After any `fetch` that writes data (POST/PUT/DELETE), check `res.ok` before refetching
