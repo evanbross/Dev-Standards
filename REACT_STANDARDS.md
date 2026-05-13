@@ -96,6 +96,12 @@ Any interval or timeout stored in a ref must be:
 3. Guarded against "component unmounted during async" races when scheduled inside a
    `.then()` / async callback.
 
+This applies to every reassignment site, including click handlers, polling starters,
+and async continuations after `await`. If code writes `timerRef.current = setInterval(...)`
+or `timerRef.current = setTimeout(...)`, there should normally be a
+`clearInterval(timerRef.current)` or `clearTimeout(timerRef.current)` immediately before
+that assignment unless a nearby comment explains why overlap is intentional.
+
 ```js
 useEffect(() => {
   let cancelled = false;
@@ -116,6 +122,16 @@ function handleRunNow() {
   pollRef.current = setInterval(pollStatus, 1500);
 }
 ```
+
+---
+
+## Shared Helper Extraction
+
+After extracting React helpers, constants, labels, formatters, or parsers into a shared
+module, grep for the old local definitions and either remove them or document why the
+behavior must intentionally differ. Build tools often do not catch duplicate helper
+drift, and duplicated UI constants such as status labels, skip reasons, source/platform
+labels, URL normalizers, and parser regexes can silently diverge across panels.
 
 ---
 

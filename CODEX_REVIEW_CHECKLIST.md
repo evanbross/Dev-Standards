@@ -47,6 +47,7 @@ configured and resolve to real files.
 | F6 | `ApiClient` namespaces are object-literal class properties when that is the established local API shape. |
 | F7 | Match TypeScript function signatures; use object params where declared. |
 | F8 | Auth pages that hide the NavBar should use `min-h-screen`, not `min-h-[calc(100vh-4rem)]`. |
+| F9 | After frontend refactors, grep for unused style constants, helper functions, and duplicate old local helper definitions. Vite/build output may not catch dead code or drift-prone duplication without linting. |
 
 ## Mobile Checks
 
