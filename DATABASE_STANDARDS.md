@@ -4,6 +4,68 @@ Rules for data access layers, migrations, and spatial data. Read `COMMON_CODING_
 
 ---
 
+## Connection Lifecycle
+
+Every database connection must be closed in a `finally` block or via a context manager.
+Never pair `.open()` / `.close()` manually without a `finally` — an exception between
+them leaks the connection and, under Postgres, eventually exhausts the connection pool.
+
+**Flask route handlers** — use a context manager that yields repos and closes in `finally`:
+
+```python
+# backend/utils.py
+from contextlib import contextmanager
+
+@contextmanager
+def get_repos():
+    repos = open_repositories(config.DATABASE_URL)
+    try:
+        yield repos
+    finally:
+        repos["conn"].close()
+
+# route handler
+@bp.route("/jobs/<int:job_id>")
+def get_job(job_id: int):
+    with get_repos() as repos:
+        job = repos["jobs"].get_by_id(job_id)
+        if not job:
+            return jsonify({"error": "Not found"}), 404
+        return jsonify(job)
+```
+
+If a route needs to release the connection before slow I/O (e.g. an AI call), close the
+`with` block before that work begins rather than calling `.close()` manually:
+
+```python
+with get_repos() as repos:
+    job = repos["jobs"].get_by_id(job_id)
+    resume_text = repos["resume"].get_latest()["content"]
+# connection released here, before the 10-30 s AI call
+result = ai_client.generate(job, resume_text)
+```
+
+**Background threads** — use an explicit `try/finally` since they hold the connection
+for the duration of the thread and need custom error handling:
+
+```python
+def _run_scan() -> None:
+    repos = open_repositories(config.DATABASE_URL)
+    try:
+        # ... scanning work ...
+        repos["conn"].commit()
+    except Exception as exc:
+        repos["conn"].rollback()
+        logger.exception("Scan failed")
+    finally:
+        repos["conn"].close()
+```
+
+Do NOT rely on the happy path to close the connection, and do NOT import or call
+a private `_get_repos` function from route handlers — it bypasses the lifecycle guarantee.
+
+---
+
 ## Database Abstraction
 
 Always introduce an abstraction layer between business logic and the database driver/ORM.
