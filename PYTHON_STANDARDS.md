@@ -46,12 +46,24 @@ still needed.
 
 ## Datetime
 
-Always use `datetime.now(UTC)` — never `datetime.utcnow()`. The latter is deprecated
-in Python 3.12 and emits `DeprecationWarning`. `UTC` is available from the `datetime` stdlib:
+All internal timestamps and dates must be in UTC. Never use local-time sources.
+
+| Wrong | Right |
+|-------|-------|
+| `datetime.utcnow()` | `datetime.now(UTC)` |
+| `date.today()` | `datetime.now(UTC).date()` |
+| `CURRENT_DATE` (PostgreSQL) | `(NOW() AT TIME ZONE 'UTC')::date` |
+
+`datetime.utcnow()` is deprecated in Python 3.12 and emits `DeprecationWarning`.
+`date.today()` and PostgreSQL's `CURRENT_DATE` return values in the process/server's
+local timezone; near midnight in a non-UTC environment they may produce the wrong date.
+
+`UTC` is available from the stdlib — no third-party import needed:
 
 ```python
 from datetime import datetime, UTC
 ts = datetime.now(UTC).isoformat(timespec="seconds")
+today = datetime.now(UTC).date()
 ```
 
 ---
