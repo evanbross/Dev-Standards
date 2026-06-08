@@ -15,6 +15,7 @@ Rules are numbered for stable reference in review notes. Do not renumber when ad
 | G3 | Do not revert user changes unless explicitly asked. Work with unrelated dirty files. |
 | G4 | Use the actual codebase as source of truth when a plan or memory disagrees with implementation. |
 | G5 | Prefer narrow edits that match existing local patterns. |
+| G6 | AI attribution (in-code `# ai:` comments and `AI-Model:` git trailers): see `COMMON_CODING_STANDARDS.md` § AI Attribution. |
 
 ## High-Risk Codex Habits To Prevent
 

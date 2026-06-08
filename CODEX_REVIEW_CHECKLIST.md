@@ -22,6 +22,7 @@ Rules are numbered for stable reference in review notes. Do not renumber when ad
 | G0 | Ask once before editing files when the project requires confirmation. Once approved, continue without asking again unless there is unusual risk or a real blocker. |
 | G1 | Follow the file layout in the plan exactly: no extra directories, no parallel implementations, no bonus files. |
 | G2 | Re-read standards at session start; see `COMMON_CODING_STANDARDS.md`. |
+| G3 | AI attribution (in-code `# ai:` comments and `AI-Model:` git trailers): see `COMMON_CODING_STANDARDS.md` § AI Attribution. |
 
 ## Python / FastAPI Backend Checks
 
@@ -30,6 +31,9 @@ Rules are numbered for stable reference in review notes. Do not renumber when ad
 | B1 | Async FastAPI code must stay async throughout: async routes, async SQLAlchemy sessions, async Redis calls. No sync blocking calls inside async functions. |
 | B2 | Never access model attributes not defined in the model. Check mapped columns before referencing them anywhere. |
 | B3 | Use pytest for Python tests. Prefer test functions and fixtures, not `unittest.TestCase` or `unittest.main()`. |
+| B4 | Never use `date.today()` or `datetime.utcnow()` — they use local time, not UTC. Use `datetime.now(UTC).date()` and `datetime.now(UTC)` respectively. Check every date/timestamp written to the DB or embedded in a generated ID. |
+| B5 | Never return `str(exc)` directly to an API client. Return a sanitized fallback string; log the full exception server-side. Raw exception text leaks connection strings, internal paths, and provider details. |
+| B6 | `except Exception` is only acceptable at the outermost boundary of a request handler or background worker. Inside service/repository methods catch specific exception types so programmer errors (`TypeError`, `AttributeError`, `KeyError`) surface in logs instead of being silently swallowed. |
 
 ## TypeScript / React Web Checks
 

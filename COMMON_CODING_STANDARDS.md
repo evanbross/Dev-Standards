@@ -82,6 +82,19 @@ When a new third-party package (or package extra) is first imported in a project
 
 ---
 
+## Single Source of Truth
+
+Never duplicate authoritative data. If a set of valid values (status enums, stage keys, feature flags, config options) is already stored in a database table, config file, or other authoritative location, validation and business logic must read from that source at runtime — not from a parallel hardcoded copy.
+
+**Why this matters:** Duplicate lists silently drift apart. When one copy is updated and the other is not, the bug is invisible until a value that exists in one place is rejected by the other.
+
+**How to apply:**
+- Before writing a validation constant (e.g. `VALID_FOO = frozenset({...})`), ask: is this set already authoritative somewhere?
+- If yes, query or import from the authoritative source instead of copying the values.
+- If a hardcoded copy already exists alongside an authoritative source, remove the copy and replace references with a runtime lookup.
+
+---
+
 ## File Headers
 
 Every new source file must begin with the copyright/license header for its language. Copy the appropriate template verbatim as the first block of the file — do not paraphrase or abbreviate it.
@@ -93,3 +106,71 @@ Every new source file must begin with the copyright/license header for its langu
 | Java                    | `Headers/FileHeader_Java.txt`   |
 | HTML                    | `Headers/FileHeader_HTML.txt`   |
 | AI prompts              | `Headers/FileHeader_Prompt.txt` |
+
+---
+
+## AI Attribution
+
+AI assistants must leave attribution breadcrumbs in two places: **in-code comments**
+for quick visual review, and **git commit trailers** for per-line accuracy via
+`git blame`. Both are required; neither alone is sufficient.
+
+---
+
+### In-code comments — mark at the granularity of the change
+
+Add an `# ai:` comment at the exact location of what you wrote or replaced. The
+position of the comment must unambiguously identify the code it belongs to.
+
+| What you did | Where to put the `# ai:` comment |
+|---|---|
+| Wrote a new function or class | Line immediately before `def` / `class` |
+| Wrote a new block within an existing function | Line immediately before that block |
+| Replaced specific lines within a function | Line immediately before the replaced lines |
+| Changed a single line within a larger block | Trailing inline comment on that line |
+
+**Format:** `# ai: <model-id> | <YYYY-MM-DD>`  
+Use your exact model identifier and the actual date the work was done.
+
+```python
+# ai: codex-o4-mini | 2026-05-01
+def process_job(job: dict) -> None:
+    original_block = job["title"]
+
+    # ai: claude-sonnet-4-6 | 2026-06-08
+    date_found = datetime.now(UTC).date().isoformat()  # was: date.today()
+```
+
+**Rules:**
+
+- **Never remove or overwrite a marker for code you did not touch.** Multiple `# ai:`
+  markers can and should coexist in one function when different AIs contributed
+  different parts. This is the correct and intended state.
+- **Replace when rewriting.** If you are replacing lines that carry an existing `# ai:`
+  marker, replace that marker with yours — the code it described is gone.
+- **No stacking on the same block.** Two `# ai:` comments in sequence describing the
+  same code block is always wrong. One replacement comment is correct.
+- **Date must be the actual work date.** Never copy a date from another `# ai:`
+  comment or use a placeholder. Use today's date.
+- **Omit for trivial changes.** Pure whitespace fixes, adding a single import, or
+  reordering arguments inside a block that already has an `# ai:` comment does not
+  require a new comment.
+
+---
+
+### Git commit trailers — per-line attribution
+
+Every commit produced by an AI must include an `AI-Model:` trailer identifying the
+exact model, alongside any `Co-Authored-By:` line:
+
+```
+Fix UTC datetime in ingest paths
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+AI-Model: claude-sonnet-4-6
+```
+
+The `AI-Model:` value must be the model's precise identifier string
+(e.g. `claude-sonnet-4-6`, `codex-o4-mini`, `gemini-2.5-pro`), not a display name.
+`git blame <file>` followed by `git show <hash>` then gives exact, per-line
+attribution for any line in the project.

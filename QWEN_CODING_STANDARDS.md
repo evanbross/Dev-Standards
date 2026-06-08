@@ -24,6 +24,7 @@ Numbers are stable references — do not renumber when adding.
 |---|---|
 | G0 | **Re-read standards at session start** — see `COMMON_CODING_STANDARDS.md`. |
 | G1 | **Follow the file layout in the plan exactly** — no extra directories, no parallel implementations, no bonus files. |
+| G2 | **AI attribution** (in-code `# ai:` comments and `AI-Model:` git trailers): see `COMMON_CODING_STANDARDS.md` § AI Attribution. |
 
 ---
 
