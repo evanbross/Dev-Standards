@@ -190,6 +190,26 @@ unambiguous to linters and consistent with how all other global browser APIs are
 
 ---
 
+## Verify JSX Edits With a Build
+
+After editing any `.jsx`/`.tsx` file, run the project's production build (e.g.
+`vite build`, `next build`) before declaring the change done — not just a linter.
+
+JSX syntax errors that a build catches instantly can otherwise ship silently:
+
+- `{/* comment */}` is only valid as a JSX *child*. Placed between attributes in an
+  opening tag (e.g. `<Foo a={1} {/* note */} b={2}>`), it is a syntax error that breaks
+  the entire module's render with no runtime warning — the component (and often its
+  whole parent tree) just stops rendering.
+- Mismatched braces/parens introduced mid-edit in a large attribute list.
+
+If `eslint` fails to run (missing config, wrong version, etc.), do not treat that as
+"good enough" — fall back to the build, which requires no extra config and catches these
+errors in seconds. Use eslint as an *additional* check when it works, not a replacement
+for the build.
+
+---
+
 ## React Native / Mobile
 
 - **Relative imports only** — do not use the `@/` alias in `apps/mobile`. Use `../`
