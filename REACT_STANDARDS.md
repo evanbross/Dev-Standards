@@ -1,17 +1,8 @@
 # React / TypeScript Standards
 
-Rules for TypeScript, React, and React Native projects. Read `COMMON_CODING_STANDARDS.md` first.
-
----
-
-## TypeScript
-
-- **No `any` types** — all values must be typed. `any` defeats the type checker for every
-  consumer of that value downstream.
-- **No `// @ts-ignore`** — fix the underlying type error instead of suppressing it.
-- **Shared types centrally** — never redeclare API response types or request body shapes
-  locally in a component or hook. All shared types belong in a shared types package and
-  must be imported from there.
+Rules for React and React Native projects. Read `COMMON_CODING_STANDARDS.md` and
+`JAVASCRIPT_TYPESCRIPT_STANDARDS.md` first — this file only covers rules specific to
+React/JSX on top of those.
 
 ---
 
@@ -24,25 +15,6 @@ crash on the next route change. Move all hook calls to the top of the component,
 any guard clauses.
 
 ---
-
-## Derived Values Must Be Declared After Their Dependencies
-
-`const` declarations are not hoisted with a value — referencing a `const` before its
-declaration line throws `ReferenceError: Cannot access 'X' before initialization` (the
-temporal dead zone). This shows up as a cryptic minified-variable error in production
-builds (e.g. `Cannot access 'm' before initialization`).
-
-Always declare computed values after all the variables they depend on:
-
-```jsx
-// Wrong — loginInProgress references running before running is declared:
-const loginInProgress = running && status?.message?.includes("...");
-const running = !!status?.running;
-
-// Correct — running is declared first:
-const running = !!status?.running;
-const loginInProgress = running && status?.message?.includes("...");
-```
 
 ## No Stub Event Handlers
 
@@ -148,45 +120,6 @@ projects can build successfully while a conditional render path still throws
 `ReferenceError: <name> is not defined` only when that branch is opened. If the project
 does not have ESLint or TypeScript `no-undef` coverage, manually inspect the touched JSX
 branches and run the closest available grep/check before finalizing.
-
----
-
-## Write Calls Must Check `res.ok`
-
-After any `fetch` that writes data (POST/PUT/DELETE), check `res.ok` before refetching
-or updating UI state. Silently refetching on a 4xx/5xx produces stale data with no
-user-visible error.
-
-```js
-const res = await fetch("/api/...", { method: "PUT", ... });
-if (!res.ok) {
-  window.alert(`Save failed: ${res.status}`);
-  return;
-}
-await refetch();
-```
-
----
-
-## Numeric Inputs Must Be Validated Before Sending
-
-`parseInt` / `parseFloat` return `NaN` for empty or non-numeric input. `NaN` serialises
-to `null` in JSON. Validate before sending:
-
-```js
-const days = parseInt(value, 10);
-if (!Number.isFinite(days) || days < 1) {
-  window.alert("Enter a valid number.");
-  return;
-}
-```
-
----
-
-## `window.confirm` — Use the Qualified Form
-
-Always write `window.confirm(...)`, never bare `confirm(...)`. The qualified form is
-unambiguous to linters and consistent with how all other global browser APIs are called.
 
 ---
 

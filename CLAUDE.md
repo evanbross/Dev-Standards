@@ -35,7 +35,8 @@ The pattern for every project `CLAUDE.md` is a list of `@` includes:
 |------|-----------------|
 | `PYTHON_STANDARDS.md` | Any Python code in the project |
 | `DATABASE_STANDARDS.md` | Any project with a database (SQL, Redis, etc.) |
-| `REACT_STANDARDS.md` | React or React Native frontend |
+| `JAVASCRIPT_TYPESCRIPT_STANDARDS.md` | Any JavaScript or TypeScript code (Node scripts, extensions, userscripts) |
+| `REACT_STANDARDS.md` | React or React Native frontend (alongside `JAVASCRIPT_TYPESCRIPT_STANDARDS.md`) |
 | `FASTAPI_STANDARDS.md` | FastAPI projects (alongside `PYTHON_STANDARDS.md`) |
 | `TESTING_STANDARDS.md` | Any project with automated tests |
 | `INFRASTRUCTURE_STANDARDS.md` | Projects with Docker, CI/CD pipelines, or deployment config |
@@ -62,6 +63,8 @@ These are Claude-specific behavioral rules that go beyond what's in the coding s
 - **No `#` comments inside quoted Bash `-c` strings** — a newline followed by `#` inside a quoted argument triggers Claude Code's path-validation warning ("Newline followed by # inside a quoted argument can hide arguments from path validation"). Never put comment lines inside `python -c "..."` or similar inline scripts. If the script needs comments or is longer than ~2 lines, write it to a temp file and run that instead.
 
 - **AI attribution** — In-code `# ai:` comments and `AI-Model:` git trailers are required. Full rule: `COMMON_CODING_STANDARDS.md` § AI Attribution.
+
+- **Complete wiring steps immediately** — if you notice a gap between what was implemented and what needs to be connected (a prop added but not passed, a handler written but not called), close it in the same turn. Never leave it as a "pending task" for the next session.
 
 ## Context Window Management
 
