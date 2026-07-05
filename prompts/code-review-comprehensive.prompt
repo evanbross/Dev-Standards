@@ -1,0 +1,57 @@
+Do a full, read-only code review of this project. Do not modify any code.
+
+Scope
+- Cover the entire application: backend services, data/repository layer, external
+  integrations, frontend, browser/extension surfaces, and the test suite.
+- Exclude only generated/vendor artifacts: dependency directories (node_modules, .venv,
+  etc.), build/dist output, lock files, and already-applied migrations.
+- If the invocation names specific areas, issue types, or prior findings to skip, honor
+  that exclusion for this run. Absent an explicit exclusion, nothing is out of scope by
+  default, including issues found in previous reviews.
+
+Standards
+- Read this project's CLAUDE.md / AGENTS.md to find which standards files it references
+  (e.g. COMMON_CODING_STANDARDS.md plus the language/framework-specific files it lists:
+  Python, Flask/FastAPI, JavaScript/TypeScript, React, database, testing, infrastructure,
+  Google API, etc.) and apply all of them.
+
+Carry forward unresolved issues (do this before looking for anything new)
+- Find this project's prior review docs (e.g. docs/code-review-*.md, or whatever naming
+  convention the project already uses) and list every finding they recorded.
+- For each one, re-check the current code to see if it was actually fixed:
+  - If fixed, drop it (do not report resolved findings).
+  - If not fixed, re-report it in the new review, carrying its original "open since" date
+    forward, unless this invocation explicitly excluded that issue.
+- Never let a real, still-present issue quietly disappear just because a previous review
+  already mentioned it. Repetition across reviews is the signal that it needs attention,
+  not a reason to stop reporting it.
+
+What to look for (new findings)
+- Correctness bugs and edge cases.
+- Exception handling: bare `except Exception` outside a request/worker boundary, swallowed
+  errors, raw exception text leaked to clients.
+- Resource leaks: unclosed files/connections/handles, missing `with`, uncleared
+  intervals/timeouts, unbounded in-memory state.
+- Dead code, stub handlers, unreachable branches, half-finished implementations.
+- Duplicated logic that belongs in a shared helper/service.
+- Security: injection (SQL, query-language, prompt injection), SSRF in URL fetchers,
+  missing/weak auth, secrets committed to code, unsafe deserialization.
+- Test coverage: missing tests for new or changed functionality, and whether the existing
+  suite currently passes.
+- Efficiency issues: N+1 queries, redundant re-renders, redundant API/network calls.
+
+Verification (required, every run)
+- Actually run the project's test suite and any build/lint steps. Report real pass/fail
+  counts and warnings. Never describe something as tested or verified without having run it.
+
+Output
+- Write to this project's existing review-doc location and naming convention if one
+  exists; otherwise create docs/code-review-<YYYY-MM-DD>.md (append -2, -3, ... if a file
+  for today already exists).
+- One heading per finding: Severity (High/Medium/Low), Location (file:line), Impact,
+  Evidence, Plan. Mark carried-forward findings with "Open since <original date>".
+  Order all findings — new and carried-forward — most severe first.
+- Only include findings verified against the actual current code — no speculative or
+  unverifiable claims.
+- End with a Verification section (actual test/build/lint results) and a Remediation Plan
+  numbered by priority, covering both new and carried-forward findings.
