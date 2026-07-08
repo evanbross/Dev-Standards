@@ -53,3 +53,26 @@ decision made inside an entry-point hook (a `before_request`/middleware guard, a
 check), extract the pure decision logic into a plain function in a shared module and have
 the entry point call it. Test the extracted function directly with plain arguments; don't
 try to import the entry-point module just to reach it.
+
+---
+
+## Keep Test Fakes in Sync with Real Interfaces
+
+When a test uses a fake/stub class (stand-in for a real repository, service, or client)
+and the real class's constructor signature or method interface changes, all fakes must be
+updated in the same commit.
+
+**Repository fakes:** If a route gains a new `repos["x"]` call, every test that
+monkeypatches `get_repos` for that route must add `"x"` to its fake repos dict. A
+missing key causes the route to raise `KeyError` before the behavior under test is
+reached, producing a misleading test failure.
+
+**Constructor fakes:** If a real class gains new constructor arguments (including keyword
+arguments), any fake that substitutes for it must accept those arguments. The minimal
+fix is `def __init__(self, *args, **kwargs): pass` when the fake doesn't use them.
+
+**Checklist when changing a route:**
+1. If you add `repos["x"]` to a route, grep test files for the route's blueprint name
+   and add `"x"` to every matching fake repos dict.
+2. If you change a constructor signature that is monkeypatched in tests, grep for the
+   class name in the test directory and update any fakes.
