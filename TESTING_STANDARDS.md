@@ -41,3 +41,15 @@ silently in some frameworks and `KeyError` in others.
 Do not seed the test database inside a sandbox and leave tests hardcoded against that
 state. Use fixtures and `conftest.py` (or equivalent) so the test suite works correctly
 against a freshly-migrated, empty schema.
+
+---
+
+## Extract Pure Logic Out of Entry-Point Modules
+
+Entry-point files (`app.py`, `main.py`) often run side effects at import time — DB
+initialization, background threads, starting a dev server — which makes importing the
+module directly in a test slow, order-dependent, or unsafe. If you need to unit-test a
+decision made inside an entry-point hook (a `before_request`/middleware guard, a startup
+check), extract the pure decision logic into a plain function in a shared module and have
+the entry point call it. Test the extracted function directly with plain arguments; don't
+try to import the entry-point module just to reach it.

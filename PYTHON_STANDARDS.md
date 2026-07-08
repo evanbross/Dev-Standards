@@ -79,6 +79,28 @@ catch `(urllib.error.URLError, TimeoutError, socket.error, json.JSONDecodeError,
 
 ---
 
+## Outbound Network Requests — SSRF Protection
+
+Any server-side code that fetches a URL that is caller-supplied, configured, imported, or
+derived from external content (email bodies, scraped HTML, webhook payloads) must validate
+the resolved destination before connecting, and again on every redirect hop. Checking the
+URL string alone is not enough — DNS can resolve an innocuous-looking hostname to a
+loopback, private, link-local (including the `169.254.169.254` cloud metadata address),
+multicast, or reserved address, and `urlopen`'s default redirect handling does not
+re-validate the `Location` header before following it.
+
+- Resolve the hostname (`socket.getaddrinfo`) and check every returned address with
+  `ipaddress.ip_address(...).is_private / is_loopback / is_link_local / is_multicast /
+  is_reserved / is_unspecified` before connecting.
+- Subclass `urllib.request.HTTPRedirectHandler` (or the equivalent in your HTTP client) to
+  re-run the same check on `newurl` before following a redirect.
+- Default-deny internal ranges. If one call site has a legitimate reason to reach a local
+  service (e.g. testing a locally-running Ollama/LLM endpoint), give that call site an
+  explicit, narrow opt-in (e.g. an `allow_loopback` parameter) rather than weakening the
+  check for every fetch in the codebase.
+
+---
+
 ## Service Layer Exception Handling — Log and Re-raise
 
 Service and repository methods that call external infrastructure (APIs, databases, file
@@ -145,6 +167,17 @@ the application entry point (`main.py`, `app.py`, etc.) inside a router or sub-m
 The entry point imports all routers, so a router that imports back from it creates a
 circular dependency that crashes startup. Shared infrastructure belongs in a `core/` or
 `config/` module imported by both the entry point and the routers.
+
+---
+
+## New Shared Helpers Must Fit the Existing Import Graph
+
+Before adding a new function to an existing shared module (e.g. `backend/utils.py`), check
+what that module already imports. If two or more call sites that need the new function are
+themselves imported *by* that shared module, putting the function there creates a cycle
+(shared module → call site → shared module). Give the new function its own leaf module
+(no imports from other project modules) instead, and have the shared module and the call
+sites both import from it.
 
 ---
 
