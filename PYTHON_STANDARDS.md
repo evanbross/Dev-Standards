@@ -68,6 +68,33 @@ today = datetime.now(UTC).date()
 
 ---
 
+## Data Validation with Pydantic
+
+Use Pydantic models to validate any data crossing a system boundary — API request/response
+bodies, config/environment loading, and external API responses — instead of hand-rolled
+dict checks (`if "field" not in data: ...`) or manual type coercion.
+
+- Define a `BaseModel` per external data shape, with type-hinted fields — this is the same
+  discipline as the type-hints rule above, just enforced at runtime instead of only by the
+  type checker.
+- Prefer Pydantic's validators (`field_validator`, `model_validator`) over ad hoc post-parse
+  checks scattered through route/service code.
+- In FastAPI projects this is already required by `FASTAPI_STANDARDS.md` (request bodies as
+  typed models, `response_model` on every route). In Flask or plain-Python projects, validate
+  manually at the top of the route handler / entry point: parse the raw dict into a Pydantic
+  model, catch `pydantic.ValidationError`, and turn it into a sanitized 400-style response
+  before the raw data reaches business logic — never let a `ValidationError` escape to a
+  generic exception handler that might leak field internals.
+- Prefer `pydantic-settings` (`BaseSettings`) over manual `os.environ.get()` calls scattered
+  across a config module — it gives typed, validated, single-source-of-truth environment
+  config instead of re-parsing and re-validating env vars ad hoc at each call site.
+- Don't use Pydantic to re-validate internal-only data that never crosses a boundary (e.g.
+  values already produced by your own ORM query). That's redundant defensive coding for
+  input that can't be malformed — reserve it for actual boundaries: incoming requests,
+  config/env, and third-party API responses.
+
+---
+
 ## Exception Handling
 
 `except Exception` is only acceptable at the outermost boundary of a request handler or
