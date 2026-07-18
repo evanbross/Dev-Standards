@@ -14,6 +14,8 @@ Standards
   (e.g. COMMON_CODING_STANDARDS.md plus the language/framework-specific files it lists:
   Python, Flask/FastAPI, JavaScript/TypeScript, React, database, testing, infrastructure,
   Google API, etc.) and apply all of them.
+- If any standards file says another standards file must be read first or also applied,
+  read and apply that transitive standards file too.
 
 Carry forward unresolved issues (do this before looking for anything new)
 - Find this project's prior review docs (e.g. docs/code-review-*.md, or whatever naming
@@ -43,6 +45,9 @@ What to look for (new findings)
 Verification (required, every run)
 - Actually run the project's test suite and any build/lint steps. Report real pass/fail
   counts and warnings. Never describe something as tested or verified without having run it.
+- Run ESLint for any JavaScript/TypeScript/React surface when ESLint is configured. If
+  ESLint is missing or not configured, report that explicitly rather than treating a
+  production build as a substitute for linting.
 
 Output
 - Write to this project's existing review-doc location and naming convention if one
