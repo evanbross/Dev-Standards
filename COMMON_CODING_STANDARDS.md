@@ -46,6 +46,19 @@ When modifying code, follow established best practices for the language and fram
 
 ---
 
+## Event-Driven Design Over Polling
+
+Default to push/event-driven mechanisms (WebSockets, SSE, webhooks, pub/sub, filesystem watchers, DB triggers/LISTEN-NOTIFY) over polling loops whenever a component needs to react to state change owned by another component. Polling is cheap to write, but it imposes a constant tax even when nothing changed, and it caps responsiveness at the poll interval — the system is always at least "one interval" late by construction.
+
+- Before adding a `setInterval`/`setTimeout` loop, a `while True: sleep(N)` loop, or a scheduled alarm/cron tick to detect a change, ask whether the producer of that change can instead notify the consumer directly.
+- If a push mechanism is added, keep the underlying data store as the single source of truth — the push channel should carry a lightweight signal ("something changed, go check") rather than being the only path data can travel, so a dropped connection or a missed message never loses state, only adds latency.
+- A slow, infrequent poll (minutes, not seconds) is still the right tool as a **fallback safety net** behind a push mechanism — it bounds the worst case if the socket/webhook is down — but it should not be the primary mechanism once a push path is available.
+- Don't over-apply this: a value that changes only because of direct user action within the same request/response cycle, or a one-off status check the user explicitly triggers, doesn't need an event system built around it. This rule is about recurring background checks for state owned elsewhere.
+
+**Why this matters:** polling that's "cheap and easy" at small scale quietly becomes the dominant source of lag and wasted work as a system grows — every consumer re-checks on its own clock regardless of whether anything changed, and the interval becomes a hard floor on responsiveness that's easy to forget is there until someone asks why something feels slow.
+
+---
+
 ## Logging Format
 
 Always configure the logging format to include **filename and line number** alongside the timestamp, level, and logger name. This is the single highest-value change for debugging — a stack trace tells you what crashed, but the log line tells you what was happening right before it.
