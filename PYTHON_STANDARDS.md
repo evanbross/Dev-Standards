@@ -208,10 +208,19 @@ sites both import from it.
 
 ---
 
-## Upsert Race Conditions
+## SELECT-then-Write Race Conditions
 
-Any SELECT-then-INSERT upsert pattern is inherently racy under concurrent writes. The
-correct pattern is to attempt the INSERT and handle the uniqueness error:
+Any pattern that reads rows in one statement and writes to those same rows in a
+*separate* statement is inherently racy under concurrent access — this applies equally
+to SELECT-then-INSERT upserts and to SELECT-then-UPDATE claim/dequeue patterns (e.g. a
+worker or HTTP handler picking up "pending" rows to process). Two concurrent callers can
+both read the same rows before either write commits, and both then act on the same data.
+This is not theoretical — it reproduces routinely on any endpoint or worker loop that can
+receive overlapping requests (a threaded HTTP server, multiple Celery workers, a
+polling loop plus a webhook, etc.).
+
+**Upsert (SELECT-then-INSERT):** attempt the INSERT and handle the uniqueness error
+instead of checking existence first:
 
 ```python
 try:
@@ -222,7 +231,38 @@ except IntegrityError:
     existing = await session.get(Model, pk)
 ```
 
-Never assume the "row not found → INSERT" path is race-free.
+**Claim/dequeue (SELECT-then-UPDATE):** never split "find candidate rows" from "mark
+them claimed" into two statements. Make the claim itself atomic in a single statement:
+
+```python
+# Postgres — atomic claim in one round trip, safe under concurrent callers:
+cur = conn.execute(
+    """
+    UPDATE task_queue
+    SET status = 'processing', updated_at = %s
+    WHERE id IN (
+        SELECT id FROM task_queue
+        WHERE status = 'pending'
+        ORDER BY created_at
+        LIMIT %s
+        FOR UPDATE SKIP LOCKED
+    )
+    RETURNING id, url, purpose
+    """,
+    (now, limit),
+)
+claimed_rows = cur.fetchall()
+```
+
+`FOR UPDATE SKIP LOCKED` inside the subquery lets concurrent callers each lock and claim
+a disjoint set of rows in the same statement — no caller can see a row another caller has
+already claimed, and none block waiting on each other. A plain `SELECT` followed by a
+separate `UPDATE ... WHERE id IN (...)` — even inside a transaction — does not have this
+property unless the SELECT itself takes the row lock.
+
+Never assume the "read candidates → write to them" path is race-free just because it
+runs inside a transaction or "usually" completes fast; any handler reachable from more
+than one thread, process, or worker must be checked for this pattern.
 
 ---
 

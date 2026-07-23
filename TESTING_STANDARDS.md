@@ -18,6 +18,28 @@ Use **pytest** for all Python tests. Do not use `unittest` or its `TestCase` cla
 
 ---
 
+## Scope pytest Collection with `testpaths`
+
+Always set `testpaths` in `pyproject.toml` (`[tool.pytest.ini_options]`) or `pytest.ini`
+so the bare `pytest` command — with no path argument — only collects the actual test
+directory. Without it, pytest's default rootdir collection walks the entire project,
+including scratch/output directories (`tmp/`, build artifacts, `.venv`) that were never
+meant to be collected and can fail for reasons unrelated to the test suite (permission
+errors, syntax in a stray script, etc.).
+
+```toml
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+norecursedirs = ["tmp", ".venv", "frontend/dist", "node_modules"]
+```
+
+**Why this matters:** contributors and CI both reach for the bare `pytest` command by
+habit. If it fails for a reason that has nothing to do with the tests themselves, that
+failure gets misread as "the suite is broken" — real regressions get lost in the noise,
+and trust in the command erodes.
+
+---
+
 ## No Mocked Databases in Integration Tests
 
 Integration tests must run against a real database instance, not mocks. A test suite that

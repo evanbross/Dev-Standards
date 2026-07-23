@@ -108,6 +108,40 @@ Never duplicate authoritative data. If a set of valid values (status enums, stag
 
 ---
 
+## Auto-Selected Runtime Values Must Not Silently Diverge
+
+When startup code auto-selects a runtime value instead of using a fixed configured one
+— scanning for a free port, picking an available temp directory, binding to an
+auto-assigned host/interface — check whether any *other* subsystem has that same value
+hardcoded or independently configured. If one exists, the auto-selection is not safe to
+do silently.
+
+This shows up most often with a port-fallback: a server tries its configured port, finds
+it busy, and falls back to the next free one so it "starts successfully" — while a
+reverse proxy, an OAuth redirect URI registered with a third party, a frontend dev-server
+proxy target, or documentation all still point at the original fixed port. The server
+looks healthy; every dependent subsystem is now silently talking to the wrong address.
+
+**Why this matters:** the failure is worse than a crash, because the process reports
+success. Nothing errors until a request that depends on the diverged value fails, and by
+then the connection between "why is login broken" and "the port auto-incremented at
+startup" is non-obvious and easy to burn significant debugging time on.
+
+**How to apply:**
+- Before adding fallback/auto-selection logic for a port, host, or path, grep for every
+  other place that value is referenced (config files, `.env`, redirect URIs registered
+  with external providers, reverse-proxy/dev-server proxy config, README setup docs).
+- If any dependent is a fixed value that cannot itself be auto-derived (e.g. an OAuth
+  redirect URI registered with an external provider), fail fast instead of falling back
+  — raise/exit with a clear "port already in use" error rather than silently moving to
+  another port.
+- If every dependent *can* derive from the same source, do that instead of duplicating
+  the selection logic — e.g. have the proxy config and redirect-URI construction both
+  read the actual bound port from one shared value at startup, not a second hardcoded
+  constant.
+
+---
+
 ## File Headers
 
 Every new source file must begin with the copyright/license header for its language. Copy the appropriate template verbatim as the first block of the file — do not paraphrase or abbreviate it.
