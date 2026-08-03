@@ -33,10 +33,9 @@ testpaths = ["tests"]
 norecursedirs = ["tmp", ".venv", "frontend/dist", "node_modules"]
 ```
 
-**Why this matters:** contributors and CI both reach for the bare `pytest` command by
-habit. If it fails for a reason that has nothing to do with the tests themselves, that
-failure gets misread as "the suite is broken" — real regressions get lost in the noise,
-and trust in the command erodes.
+**Why:** contributors and CI both reach for the bare `pytest` command by habit. A failure
+unrelated to the tests themselves gets misread as "the suite is broken," burying real
+regressions in the noise.
 
 ---
 

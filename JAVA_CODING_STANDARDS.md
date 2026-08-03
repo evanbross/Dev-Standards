@@ -39,10 +39,7 @@
 
 - Annotate every overriding method with `@Override` — the compiler then catches stale overrides before they silently become no-ops
 - Return and accept interface types (`List<T>`, not `ArrayList<T>`) — callers should not depend on the concrete implementation
-- Use section-comment dividers to group logical blocks within larger classes:
-  ```java
-  // ── UI construction ──────────────────────────────────────────────────────
-  ```
+- Use section-comment dividers (e.g. `// ── UI construction ──`) to group logical blocks within larger classes
 
 ## Modern Java Idioms (Java 17+)
 

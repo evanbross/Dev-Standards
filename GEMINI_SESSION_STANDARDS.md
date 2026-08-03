@@ -37,14 +37,9 @@ When calling an upload presign endpoint, pass the actual file's content type fro
 When a method is removed from a service, simultaneously remove every import of that
 method in every file that referenced it. Never leave stale imports.
 
-**F4. `enabled` guard on every conditional query**
-Any `useQuery` that should only fire for certain roles or states MUST pass an explicit
-`enabled: <boolean expression>`. Never rely on error-handling to suppress requests that
-should not be made.
-
-**F5. `QueryClientProvider` placement**
-Never call `useQuery`-based hooks in the same component that provides `QueryClientProvider`.
-Split into an outer provider component and an inner consumer.
+**F4. TanStack Query rules**
+`enabled` guard on conditional queries, `QueryClientProvider` placement: see
+`REACT_STANDARDS.md` § TanStack Query.
 
 ---
 
@@ -53,8 +48,7 @@ Split into an outer provider component and an inner consumer.
 Gemini-specific failure modes. Base rules are in `PYTHON_STANDARDS.md` and `FASTAPI_STANDARDS.md`.
 
 **B1. Never access model attributes that aren't in the model definition**
-Before referencing `obj.some_field` on an ORM model, confirm the field exists as a
-mapped column or relationship. Invented fields raise `AttributeError` at runtime.
+See `FASTAPI_STANDARDS.md` § Never Access Undefined Model Attributes.
 
 **B2. Never use `datetime.utcnow` in SQLAlchemy column defaults**
 Always use `lambda: datetime.now(timezone.utc)`:
@@ -72,6 +66,4 @@ created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 ## Infrastructure / CI
 
 **I1. Use the correct CI platform**
-Check which platform the project uses before generating pipeline config. GitLab uses
-`.gitlab-ci.yml`, while GitHub uses `.github/workflows/*.yml`. Networking and syntax
-differ significantly between them.
+See `INFRASTRUCTURE_STANDARDS.md` § CI Platform.

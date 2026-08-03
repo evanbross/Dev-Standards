@@ -26,14 +26,17 @@ Rules are numbered for stable reference in review notes. Do not renumber when ad
 
 ## Python / FastAPI Backend Checks
 
-| # | Rule |
-|---|---|
-| B1 | Async FastAPI code must stay async throughout: async routes, async SQLAlchemy sessions, async Redis calls. No sync blocking calls inside async functions. |
-| B2 | Never access model attributes not defined in the model. Check mapped columns before referencing them anywhere. |
-| B3 | Use pytest for Python tests. Prefer test functions and fixtures, not `unittest.TestCase` or `unittest.main()`. |
-| B4 | Never use `date.today()` or `datetime.utcnow()` — they use local time, not UTC. Use `datetime.now(UTC).date()` and `datetime.now(UTC)` respectively. Check every date/timestamp written to the DB or embedded in a generated ID. |
-| B5 | Never return `str(exc)` directly to an API client. Return a sanitized fallback string; log the full exception server-side. Raw exception text leaks connection strings, internal paths, and provider details. |
-| B6 | `except Exception` is only acceptable at the outermost boundary of a request handler or background worker. Inside service/repository methods catch specific exception types so programmer errors (`TypeError`, `AttributeError`, `KeyError`) surface in logs instead of being silently swallowed. |
+Full rules live in `PYTHON_STANDARDS.md` and `FASTAPI_STANDARDS.md` — check these
+Codex-prone failure points against them before finishing:
+
+| # | Rule | Full rule |
+|---|---|---|
+| B1 | Async stays async throughout — no sync blocking calls inside async routes. | `FASTAPI_STANDARDS.md` § Async Throughout |
+| B2 | Never access model attributes not defined in the model. | `FASTAPI_STANDARDS.md` § Never Access Undefined Model Attributes |
+| B3 | pytest only — no `unittest.TestCase` / `unittest.main()`. | `TESTING_STANDARDS.md` § Test Framework |
+| B4 | UTC only — no `date.today()` / `datetime.utcnow()`. Check every date/timestamp written to the DB or embedded in a generated ID. | `PYTHON_STANDARDS.md` § Datetime |
+| B5 | Never return `str(exc)` to an API client. | `PYTHON_STANDARDS.md` § Service Layer Exception Handling |
+| B6 | `except Exception` only at the outermost handler/worker boundary. | `PYTHON_STANDARDS.md` § Exception Handling |
 
 ## TypeScript / React Web Checks
 
@@ -44,9 +47,7 @@ configured and resolve to real files.
 | # | Rule |
 |---|---|
 | F1 | Use the configured import aliases (e.g. `@/`) correctly instead of deep relative `../../` paths where applicable. |
-| F2 | Conditional TanStack queries need an `enabled` guard. |
-| F3 | Do not call hooks in the same component that renders `QueryClientProvider`; split provider and consumer. |
-| F4 | Use TanStack Query for server state when that is the project's established pattern. |
+| F2 | TanStack Query rules (`enabled` guard, `QueryClientProvider` placement): see `REACT_STANDARDS.md` § TanStack Query. |
 | F5 | Components own UI only; data fetching belongs in custom hooks where the project uses that pattern. |
 | F6 | `ApiClient` namespaces are object-literal class properties when that is the established local API shape. |
 | F7 | Match TypeScript function signatures; use object params where declared. |
@@ -66,7 +67,7 @@ configured and resolve to real files.
 
 | # | Rule |
 |---|---|
-| I1 | Verify the CI platform before adding pipeline config. Do not create GitHub Actions for a GitLab project or vice versa. |
+| I1 | Verify the CI platform before adding pipeline config: see `INFRASTRUCTURE_STANDARDS.md` § CI Platform. |
 
 ## Codex-Specific Failure Patterns
 

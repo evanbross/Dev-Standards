@@ -211,13 +211,12 @@ sites both import from it.
 ## SELECT-then-Write Race Conditions
 
 Any pattern that reads rows in one statement and writes to those same rows in a
-*separate* statement is inherently racy under concurrent access — this applies equally
-to SELECT-then-INSERT upserts and to SELECT-then-UPDATE claim/dequeue patterns (e.g. a
-worker or HTTP handler picking up "pending" rows to process). Two concurrent callers can
-both read the same rows before either write commits, and both then act on the same data.
-This is not theoretical — it reproduces routinely on any endpoint or worker loop that can
-receive overlapping requests (a threaded HTTP server, multiple Celery workers, a
-polling loop plus a webhook, etc.).
+*separate* statement is racy under concurrent access — this applies equally to
+SELECT-then-INSERT upserts and SELECT-then-UPDATE claim/dequeue patterns (e.g. a worker
+or HTTP handler picking up "pending" rows). Two concurrent callers can both read the same
+rows before either write commits, then act on the same data. This reproduces routinely on
+any endpoint or worker loop reachable from overlapping requests (a threaded HTTP server,
+multiple Celery workers, a polling loop plus a webhook).
 
 **Upsert (SELECT-then-INSERT):** attempt the INSERT and handle the uniqueness error
 instead of checking existence first:
@@ -255,14 +254,14 @@ claimed_rows = cur.fetchall()
 ```
 
 `FOR UPDATE SKIP LOCKED` inside the subquery lets concurrent callers each lock and claim
-a disjoint set of rows in the same statement — no caller can see a row another caller has
-already claimed, and none block waiting on each other. A plain `SELECT` followed by a
-separate `UPDATE ... WHERE id IN (...)` — even inside a transaction — does not have this
-property unless the SELECT itself takes the row lock.
+a disjoint set of rows in one statement — no caller sees a row another has already
+claimed, and none block on each other. A plain `SELECT` followed by a separate
+`UPDATE ... WHERE id IN (...)` doesn't have this property, even inside a transaction,
+unless the SELECT itself takes the row lock.
 
-Never assume the "read candidates → write to them" path is race-free just because it
-runs inside a transaction or "usually" completes fast; any handler reachable from more
-than one thread, process, or worker must be checked for this pattern.
+Being inside a transaction or "usually" completing fast does not make a
+read-candidates-then-write path race-free; check this pattern in any handler reachable
+from more than one thread, process, or worker.
 
 ---
 

@@ -34,16 +34,9 @@ def get_job(job_id: int):
         return jsonify(job)
 ```
 
-If a route needs to release the connection before slow I/O (e.g. an AI call), close the
-`with` block before that work begins rather than calling `.close()` manually:
-
-```python
-with get_repos() as repos:
-    job = repos["jobs"].get_by_id(job_id)
-    resume_text = repos["resume"].get_latest()["content"]
-# connection released here, before the 10-30 s AI call
-result = ai_client.generate(job, resume_text)
-```
+If a route needs to release the connection before slow I/O (e.g. an AI call), end the
+`with get_repos()` block before that work begins instead of calling `.close()` manually —
+do the DB reads inside the block, then run the slow call after it exits.
 
 **Background threads** — use an explicit `try/finally` since they hold the connection
 for the duration of the thread and need custom error handling:

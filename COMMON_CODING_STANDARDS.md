@@ -55,7 +55,7 @@ Default to push/event-driven mechanisms (WebSockets, SSE, webhooks, pub/sub, fil
 - A slow, infrequent poll (minutes, not seconds) is still the right tool as a **fallback safety net** behind a push mechanism — it bounds the worst case if the socket/webhook is down — but it should not be the primary mechanism once a push path is available.
 - Don't over-apply this: a value that changes only because of direct user action within the same request/response cycle, or a one-off status check the user explicitly triggers, doesn't need an event system built around it. This rule is about recurring background checks for state owned elsewhere.
 
-**Why this matters:** polling that's "cheap and easy" at small scale quietly becomes the dominant source of lag and wasted work as a system grows — every consumer re-checks on its own clock regardless of whether anything changed, and the interval becomes a hard floor on responsiveness that's easy to forget is there until someone asks why something feels slow.
+**Why:** polling that's cheap at small scale becomes the dominant source of lag and wasted work as a system grows, and the interval becomes a hard floor on responsiveness that's easy to forget until someone asks why something feels slow.
 
 ---
 
@@ -111,34 +111,26 @@ Never duplicate authoritative data. If a set of valid values (status enums, stag
 ## Auto-Selected Runtime Values Must Not Silently Diverge
 
 When startup code auto-selects a runtime value instead of using a fixed configured one
-— scanning for a free port, picking an available temp directory, binding to an
-auto-assigned host/interface — check whether any *other* subsystem has that same value
-hardcoded or independently configured. If one exists, the auto-selection is not safe to
-do silently.
+— a free port scan, an available temp directory, an auto-assigned host/interface —
+check whether any *other* subsystem has that same value hardcoded or independently
+configured. If one does, silent auto-selection isn't safe.
 
-This shows up most often with a port-fallback: a server tries its configured port, finds
-it busy, and falls back to the next free one so it "starts successfully" — while a
-reverse proxy, an OAuth redirect URI registered with a third party, a frontend dev-server
-proxy target, or documentation all still point at the original fixed port. The server
-looks healthy; every dependent subsystem is now silently talking to the wrong address.
+The common case is a port fallback: the configured port is busy, so the server moves to
+the next free one and "starts successfully" — while a reverse proxy, an OAuth redirect
+URI, a dev-server proxy target, or docs still point at the original port. The server
+looks healthy; every dependent is now silently talking to the wrong address.
 
-**Why this matters:** the failure is worse than a crash, because the process reports
-success. Nothing errors until a request that depends on the diverged value fails, and by
-then the connection between "why is login broken" and "the port auto-incremented at
-startup" is non-obvious and easy to burn significant debugging time on.
+**Why:** the failure looks like success. Nothing errors until a request depending on the
+diverged value fails, and the link between that failure and "the port auto-incremented
+at startup" is non-obvious to trace.
 
 **How to apply:**
-- Before adding fallback/auto-selection logic for a port, host, or path, grep for every
-  other place that value is referenced (config files, `.env`, redirect URIs registered
-  with external providers, reverse-proxy/dev-server proxy config, README setup docs).
-- If any dependent is a fixed value that cannot itself be auto-derived (e.g. an OAuth
-  redirect URI registered with an external provider), fail fast instead of falling back
-  — raise/exit with a clear "port already in use" error rather than silently moving to
-  another port.
+- Before adding auto-selection for a port, host, or path, grep every place that value is
+  referenced (config files, `.env`, external redirect URIs, proxy config, setup docs).
+- If a dependent is fixed and can't itself be auto-derived (e.g. an OAuth redirect URI
+  registered with an external provider), fail fast instead of falling back.
 - If every dependent *can* derive from the same source, do that instead of duplicating
-  the selection logic — e.g. have the proxy config and redirect-URI construction both
-  read the actual bound port from one shared value at startup, not a second hardcoded
-  constant.
+  the selection logic — read the one bound value at startup, not a second constant.
 
 ---
 

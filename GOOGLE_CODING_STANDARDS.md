@@ -75,20 +75,10 @@ building a write range), request `gridProperties.columnCount` from the API:
 fields="sheets(properties(gridProperties(columnCount,rowCount)),...)"
 # then:
 column_count = sheet["properties"]["gridProperties"]["columnCount"]
-col_letter = _col_index_to_letter(column_count)  # see helper below
 ```
 
-Helper for converting a 1-based column index to a column letter (supports AA, AB, etc.):
-
-```python
-def _col_index_to_letter(n: int) -> str:
-    """Convert a 1-based column index to a Sheets column letter (e.g. 27 → 'AA')."""
-    result = ""
-    while n > 0:
-        n, remainder = divmod(n - 1, 26)
-        result = chr(65 + remainder) + result
-    return result
-```
+Converting the 1-based count to a letter (27 → `AA`) is a standard bijective base-26
+conversion — write it with `divmod(n - 1, 26)` in a loop, not a lookup table.
 
 ---
 
@@ -127,20 +117,10 @@ directly.
 ## Color Values Are 0..1 Floats
 
 Google Sheets color objects use floating-point channels in the range `0.0`–`1.0`, not
-0–255 integers. Convert to CSS hex with:
+0–255 integers — convert with `round(channel * 255)` per channel, not a direct cast.
 
-```python
-def _google_color_to_hex(color: dict[str, Any] | None) -> str | None:
-    if not color:
-        return None
-    red   = round(float(color.get("red",   0)) * 255)
-    green = round(float(color.get("green", 0)) * 255)
-    blue  = round(float(color.get("blue",  0)) * 255)
-    return f"#{red:02x}{green:02x}{blue:02x}"
-```
-
-Always use `.get("red", 0)` defaults — Google omits a channel key entirely when its
-value is 0, so `color["red"]` raises `KeyError` on a pure-green cell.
+Always use `.get("red", 0)` defaults, never `color["red"]` — Google omits a channel key
+entirely when its value is 0, so a pure-green cell raises `KeyError` on the red channel.
 
 ---
 

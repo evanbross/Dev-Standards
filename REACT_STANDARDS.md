@@ -143,6 +143,17 @@ for the build.
 
 ---
 
+## TanStack Query
+
+- **`enabled` guard on conditional queries** — any `useQuery` that should only fire for
+  certain roles or states must pass an explicit `enabled: <boolean expression>`. Don't
+  rely on error handling to suppress requests that shouldn't be made at all.
+- **`QueryClientProvider` placement** — never call `useQuery`-based hooks in the same
+  component that renders `QueryClientProvider`. Split into an outer provider component
+  and an inner consumer.
+
+---
+
 ## React Native / Mobile
 
 - **Relative imports only** — do not use the `@/` alias in `apps/mobile`. Use `../`
