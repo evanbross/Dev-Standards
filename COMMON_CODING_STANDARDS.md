@@ -95,6 +95,47 @@ When a new third-party package (or package extra) is first imported in a project
 
 ---
 
+## Do Not Cut Corners
+
+When a fix or feature surfaces an existing shortcut — a misleading name, a duplicated
+list, a validation step that was skipped, a root cause left unaddressed while a symptom
+gets patched — fix the actual thing instead of routing around it, even when the narrow
+patch is faster to ship. "It technically works" is not the bar; "it won't quietly mislead
+the next person who reads or extends it" is.
+
+This is not a license to over-build. It is the opposite failure mode from
+**No speculative abstractions** above: that rule says don't build generality nobody asked
+for; this rule says don't leave a known problem in place because fixing it properly costs
+more than the minimum patch. Telling the two apart:
+
+- **Speculative abstraction** (avoid): adding a config system, plugin architecture, or
+  extra indirection for a hypothetical future need that doesn't exist yet.
+- **Cutting a corner** (avoid): noticing a column/field is misnamed, a list is duplicated
+  in two places, or a helper's logic is copy-pasted three times — and leaving it that way
+  because the task at hand only strictly required touching one of the copies.
+
+**How to apply:**
+- If a rename, bug fix, or new feature touches code that has a sibling duplicate
+  elsewhere (the same fallback expression, the same allowlist, the same magic string),
+  fix all of them in the same change, not just the one the task happened to touch.
+- If you find yourself hardcoding a name, path, or value that's already defined as a
+  constant/enum/column list elsewhere, reference that source instead of retyping it —
+  see **Single Source of Truth** below.
+- If full scope is too large for the current change (e.g. dozens of call sites), it's fine
+  to do the change in the highest-leverage places first — but say so explicitly to the
+  user, naming what's deferred, rather than silently leaving a partial fix that looks
+  complete.
+- When genuinely blocked on scope or risk (a live production migration, a change that
+  would touch code outside the current task's stated boundaries), surface the tradeoff
+  and let the user decide — don't unilaterally decide "good enough" and move on quietly.
+
+**Why:** a corner cut today reads as done. It isn't discovered as a shortcut until it
+causes a real bug — two copies of a list drifting apart, a column name that no longer
+describes what it holds, a duplicated fallback that one call site updates and the other
+doesn't. The cost didn't go away; it moved downstream and got a compound interest rate.
+
+---
+
 ## Single Source of Truth
 
 Never duplicate authoritative data. If a set of valid values (status enums, stage keys, feature flags, config options) is already stored in a database table, config file, or other authoritative location, validation and business logic must read from that source at runtime — not from a parallel hardcoded copy.
