@@ -312,6 +312,20 @@ back.
 
 ---
 
+## Connection Lifetime vs. Slow External Work
+
+Never hold a pooled DB connection open across slow external I/O (AI calls, HTTP fetches,
+scraping). Load, release, do the slow work, reopen for writes.
+
+**Why:** pooled connections are limited; a slow external call holding one for 30-60s can
+exhaust the pool under any overlapping request or background task.
+
+**How to apply:** if `with get_repos()` (or equivalent) wraps a call to an AI provider,
+`requests`/`httpx`, or another network client, split it into read → release → external
+work → reopen-for-write.
+
+---
+
 ## File Handles
 
 Always use a `with` block for file handles, including third-party objects that support
