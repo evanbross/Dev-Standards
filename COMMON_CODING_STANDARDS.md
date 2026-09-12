@@ -46,6 +46,13 @@ When modifying code, follow established best practices for the language and fram
 
 ---
 
+## Git Workflow
+
+- **Prefix temporary/working branches with `evan-`** (e.g. `evan-fix-duplicate-jobs`, `evan-2026-09-11-session`) so branch authorship is identifiable at a glance. Does not apply to branches the user explicitly names with a different prefix themselves.
+- **Push to the remote immediately after every commit**, on any branch — not just `main`. Use `git push -u origin <branch>` the first time a new branch is pushed so it tracks upstream. If the push fails (e.g. no SSH agent in the terminal), report the failure clearly and tell the user to push manually (e.g. `! git push` in Claude Code, or via TortoiseGit) rather than silently leaving commits unpushed.
+
+---
+
 ## Event-Driven Design Over Polling
 
 Default to push/event-driven mechanisms (WebSockets, SSE, webhooks, pub/sub, filesystem watchers, DB triggers/LISTEN-NOTIFY) over polling loops whenever a component needs to react to state change owned by another component. Polling is cheap to write, but it imposes a constant tax even when nothing changed, and it caps responsiveness at the poll interval — the system is always at least "one interval" late by construction.
