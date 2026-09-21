@@ -194,6 +194,13 @@ Every new source file must begin with the copyright/license header for its langu
 | HTML                    | `Headers/FileHeader_HTML.txt`   |
 | AI prompts              | `Headers/FileHeader_Prompt.txt` |
 
+The default templates above are marked "Personal Use Only / non-commercial." A project that is
+itself a commercial ZombieTech LLC product (sold or operated as a paid product/service, not merely
+used personally) uses the proprietary variants instead — same copyright holder, license terms
+swapped to proprietary/all-rights-reserved: `Headers/FileHeader_Python_Proprietary.txt` and
+`Headers/FileHeader_JS_Proprietary.txt`. A project's `AGENTS.md`/`CLAUDE.md` states explicitly which
+pair applies; do not assume the default.
+
 ---
 
 ## AI Attribution

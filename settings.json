@@ -13,11 +13,11 @@
       "Bash(.venv/Scripts/python.exe --version)",
       "WebSearch"
     ],
-    "defaultMode": "plan"
+    "defaultMode": "auto"
   },
   "enabledPlugins": {
-    "voicemode@voicemode": true,
-    "test-automator@voltagent-subagents": true
+    "voicemode@voicemode": false,
+    "test-automator@voltagent-subagents": false
   },
   "extraKnownMarketplaces": {
     "voicemode": {
@@ -40,7 +40,7 @@
     }
   },
   "autoUpdatesChannel": "latest",
-  "voiceEnabled": true,
+  "voiceEnabled": false,
   "mcpServers": {
     "google-calendar": {
       "command": "npx",
