@@ -156,6 +156,42 @@ Never duplicate authoritative data. If a set of valid values (status enums, stag
 
 ---
 
+## Verify Every Cross-Boundary Contract at Its Owning Layer
+
+Any code that consumes a contract owned somewhere else must be checked against the
+authoritative definition and tested at a layer capable of rejecting an invalid
+assumption. This applies to both internal and external boundaries, including:
+
+- database tables, views, functions, migrations, constraints, and result-column aliases;
+- HTTP routes, methods, request/response schemas, status codes, and authentication;
+- imported modules, exported symbols, constructor signatures, and callback interfaces;
+- frontend/backend payloads and serialized field names;
+- files, environment variables, command-line tools, queues, webhooks, and third-party APIs.
+
+Before writing or changing a consumer:
+
+1. Locate the authoritative producer/definition and verify every consumed name, type,
+   shape, method, and semantic assumption exactly. Do not infer a view column from its
+   source column, an API response from a nearby model, or an export from memory.
+2. Add or run a contract-level test that crosses the real boundary. The test must be
+   capable of failing for the mistake being guarded against. Linters, compilation,
+   mocked repositories, and tests that replace the producer cannot validate the
+   producer/consumer contract they bypass.
+3. Keep unit tests for local logic, but do not present them as evidence that an
+   unexecuted SQL query, HTTP exchange, import, serialization path, or external call is
+   valid.
+
+When a contract mismatch is discovered, treat it as evidence of a potentially repeated
+failure pattern: search the repository for the same identifier, assumption, and sibling
+consumers; correct affected existing paths in scope; and add regression coverage at the
+owning boundary. If the audit or remediation is too broad or risky for the current task,
+report the exact deferred scope instead of silently fixing only the observed occurrence.
+
+**Why:** code can compile, lint, and pass fully mocked tests while still failing on its
+first real interaction. Verification must occur where the contract is actually enforced.
+
+---
+
 ## Auto-Selected Runtime Values Must Not Silently Diverge
 
 When startup code auto-selects a runtime value instead of using a fixed configured one

@@ -37,6 +37,7 @@ Codex-prone failure points against them before finishing:
 | B4 | UTC only — no `date.today()` / `datetime.utcnow()`. Check every date/timestamp written to the DB or embedded in a generated ID. | `PYTHON_STANDARDS.md` § Datetime |
 | B5 | Never return `str(exc)` to an API client. | `PYTHON_STANDARDS.md` § Service Layer Exception Handling |
 | B6 | `except Exception` only at the outermost handler/worker boundary. | `PYTHON_STANDARDS.md` § Exception Handling |
+| B7 | For every new/changed SQL path, verify identifiers against the authoritative schema/view/function definition and execute it in a real-database integration test. Mocked route/service tests, lint, and compilation do not validate SQL contracts. | `COMMON_CODING_STANDARDS.md` § Verify Every Cross-Boundary Contract at Its Owning Layer; `TESTING_STANDARDS.md` § New or Changed Queries Must Execute Against the Real Schema |
 
 ## TypeScript / React Web Checks
 
@@ -101,6 +102,20 @@ If a standards file listed in `AGENTS.md` fails to read via a relative path, ret
 resolved absolute path from the project root. Only report it missing if both attempts fail.
 This guards against sandbox path translation issues around paths such as `../Dev-Standards/...`.
 
+### C6. Build a Contract Verification Matrix
+
+Before finalizing, list each cross-boundary contract introduced or changed by the diff
+(database, HTTP, imports/exports, serialization, files/env/CLI, queues/webhooks, or
+third-party APIs). For each one, confirm both:
+
+1. the consumer was checked against the authoritative producer/definition; and
+2. verification exercised the real boundary at a layer capable of rejecting a wrong
+   name, type, shape, method, or semantic assumption.
+
+Do not count a mock that replaces the producer as contract verification. If a mismatch
+was found during the task, grep for the same assumption and audit sibling consumers,
+including pre-existing ones; document any remediation that must be deferred.
+
 ## Known Codex Risk Patterns
 
 | Risk | What to check |
@@ -113,6 +128,7 @@ This guards against sandbox path translation issues around paths such as `../Dev
 | File encoding | Verify generated text files are UTF-8 where relevant, especially dependency and config files. |
 | Import workarounds | Search for fake modules or `sys.modules` injection added to avoid fixing real imports. |
 | Env var drift | Cross-check new env vars against examples and docs. |
+| Contract bypass | A mocked producer can make the consumer test pass while the real database/API/module/file contract is invalid. Require one boundary-capable test per changed contract. |
 
 ## Comparison Notes From Prior Reviews
 

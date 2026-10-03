@@ -46,6 +46,23 @@ passes against mocks but fails against the real schema provides false confidence
 mock diverges from the real schema over time and the divergence goes undetected until
 production.
 
+### New or Changed Queries Must Execute Against the Real Schema
+
+Every new or materially changed repository query, view/function call, ORM mapping, or
+migration-dependent read/write path must have an integration test that executes it
+against a freshly initialized real database schema. Assert the returned shape and the
+important semantics, not merely that the call did not raise.
+
+A route or service test with a fake repository does not satisfy this requirement: it
+tests orchestration while bypassing the SQL and schema contract. Static compilation,
+linters, and type checkers also do not validate embedded SQL identifiers. Keep those
+checks, but pair them with the database integration test that can detect missing columns,
+incorrect aliases, invalid joins, constraint mismatches, and provider-specific syntax.
+
+When a production query fails because of schema drift or an invalid assumption, add the
+regression test to the repository/data-access layer and audit sibling queries that use
+the same table, view, function, alias, or assumption.
+
 ---
 
 ## Test Fixtures Must Match the Actual Response Schema
