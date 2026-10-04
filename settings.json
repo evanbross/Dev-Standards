@@ -40,6 +40,10 @@
   },
   "autoUpdatesChannel": "latest",
   "tui": "fullscreen",
+  "statusLine": {
+    "type": "command",
+    "command": "node ~/.claude/context-bar-statusline.js"
+  },
   "autoMode": {
     "environment": [
       "### Org-wide",
