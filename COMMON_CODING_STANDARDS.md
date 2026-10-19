@@ -243,7 +243,8 @@ itself a commercial ZombieTech LLC product (sold or operated as a paid product/s
 used personally) uses the proprietary variants instead — same copyright holder, license terms
 swapped to proprietary/all-rights-reserved: `Headers/FileHeader_Python_Proprietary.txt` and
 `Headers/FileHeader_JS_Proprietary.txt`. A project's `AGENTS.md`/`CLAUDE.md` states explicitly which
-pair applies; do not assume the default.
+pair applies; do not assume the default. Proprietary projects also ship a root `LICENSE` restating the
+proprietary header's terms (see `BizMan/LICENSE`), so the repo never shows "No license."
 
 ---
 
