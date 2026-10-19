@@ -230,7 +230,15 @@ Every new source file must begin with the copyright/license header for its langu
 | HTML                    | `Headers/FileHeader_HTML.txt`   |
 | AI prompts              | `Headers/FileHeader_Prompt.txt` |
 
-The default templates above are marked "Personal Use Only / non-commercial." A project that is
+The default templates above don't contain the license terms themselves. They carry
+`SPDX-License-Identifier: PolyForm-Strict-1.0.0` and point to the project's root `LICENSE` file,
+so any project using them **must** have a root `LICENSE` holding a
+`Copyright (c) <year> ZombieTech LLC` line followed by the unmodified PolyForm Strict 1.0.0 text
+(https://polyformproject.org/licenses/strict/1.0.0). Without that file, the header references
+terms that don't exist in the repo. To change a project's license later (e.g. to PolyForm
+Noncommercial), replace `LICENSE` and the SPDX identifier together.
+
+A project that is
 itself a commercial ZombieTech LLC product (sold or operated as a paid product/service, not merely
 used personally) uses the proprietary variants instead — same copyright holder, license terms
 swapped to proprietary/all-rights-reserved: `Headers/FileHeader_Python_Proprietary.txt` and
