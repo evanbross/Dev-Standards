@@ -49,6 +49,13 @@ When modifying code, follow established best practices for the language and fram
 ## Git Workflow
 
 - **Prefix temporary/working branches with `evan-`** (e.g. `evan-fix-duplicate-jobs`, `evan-2026-09-11-session`) so branch authorship is identifiable at a glance. Does not apply to branches the user explicitly names with a different prefix themselves.
+- **Delete a fully AI-generated branch after merging it, without asking.** Once a branch
+  is merged into `main`, delete it (locally and on the remote) without asking first —
+  but only when all three hold: an AI created the branch, every commit on it was
+  AI-generated, and nobody edited it by hand. If any commit has a human author or
+  hand edits, or the user said to keep the branch, ask before deleting it. Check
+  authorship with `git log main..<branch>` before merging, so the evidence is
+  still on the branch.
 - **Push to the remote immediately after every commit**, on any branch — not just `main`. Use `git push -u origin <branch>` the first time a new branch is pushed so it tracks upstream. If the push fails (e.g. no SSH agent in the terminal), report the failure clearly and tell the user to push manually (e.g. `! git push` in Claude Code, or via TortoiseGit) rather than silently leaving commits unpushed.
 
 ---
