@@ -60,6 +60,32 @@ When modifying code, follow established best practices for the language and fram
 
 ---
 
+## Always Bump the Version Before Handing Over a New Build
+
+Any project that ships a versioned, installable artifact — a browser extension
+(`manifest.json`), an npm/PyPI package, a desktop app build, a mobile app — must have
+its version number bumped before telling the user to reload, reinstall, or redownload
+it. Never hand over install/reload instructions for a change that didn't also bump the
+version field.
+
+**How to apply:**
+- Before telling the user to reload/reinstall/redownload, check whether the version
+  field changed in the same diff; if it didn't, bump it first.
+- Match the bump granularity already established in that project (e.g. patch for a bug
+  fix, minor for a new capability) — check recent commit history for the pattern
+  instead of guessing.
+- Bump it in the same commit as the behavior change when that commit hasn't been pushed
+  yet; otherwise a small follow-up commit is fine, but the bump must exist before the
+  user is told to install the new version.
+
+**Why:** the version number is the only cheap, visible way to confirm after
+reinstalling that the new code actually took effect. Without a bump, "reload the
+extension" and "it still says 1.38.2" are indistinguishable from the fix never having
+shipped — the user has no way to tell a stale cached build from a successfully updated
+one just by looking.
+
+---
+
 ## Event-Driven Design Over Polling
 
 Default to push/event-driven mechanisms (WebSockets, SSE, webhooks, pub/sub, filesystem watchers, DB triggers/LISTEN-NOTIFY) over polling loops whenever a component needs to react to state change owned by another component. Polling is cheap to write, but it imposes a constant tax even when nothing changed, and it caps responsiveness at the poll interval — the system is always at least "one interval" late by construction.
