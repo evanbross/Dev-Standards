@@ -15,29 +15,36 @@ Load this checklist when any of these are true:
 
 ## General Behavior Rules
 
-Rules are numbered for stable reference in review notes. Do not renumber when adding.
+The canonical, stable-numbered `G`-rule table is `CODEX_SESSION_RULES.md` § Required
+Behavior (`G0`–`G6`). Read it there — this file does not redefine the `G`-prefixed rules,
+so a rule number never means two different things depending on which file you're looking
+at. The `B`/`F`/`M`/`I`/`C` checks below are specific to this checklist and cover
+different failure points.
 
-| # | Rule |
-|---|---|
-| G0 | Ask once before editing files when the project requires confirmation. Once approved, continue without asking again unless there is unusual risk or a real blocker. |
-| G1 | Follow the file layout in the plan exactly: no extra directories, no parallel implementations, no bonus files. |
-| G2 | Re-read standards at session start; see `COMMON_CODING_STANDARDS.md`. |
-| G3 | AI attribution (in-code `# ai:` comments and `AI-Model:` git trailers): see `COMMON_CODING_STANDARDS.md` § AI Attribution. |
+## Python Backend Checks (Flask & FastAPI)
 
-## Python / FastAPI Backend Checks
-
-Full rules live in `PYTHON_STANDARDS.md` and `FASTAPI_STANDARDS.md` — check these
-Codex-prone failure points against them before finishing:
+These apply to any Python backend, framework-agnostic. Full rules live in
+`PYTHON_STANDARDS.md`, `TESTING_STANDARDS.md`, and `COMMON_CODING_STANDARDS.md` — check
+these Codex-prone failure points against them before finishing:
 
 | # | Rule | Full rule |
 |---|---|---|
-| B1 | Async stays async throughout — no sync blocking calls inside async routes. | `FASTAPI_STANDARDS.md` § Async Throughout |
-| B2 | Never access model attributes not defined in the model. | `FASTAPI_STANDARDS.md` § Never Access Undefined Model Attributes |
 | B3 | pytest only — no `unittest.TestCase` / `unittest.main()`. | `TESTING_STANDARDS.md` § Test Framework |
 | B4 | UTC only — no `date.today()` / `datetime.utcnow()`. Check every date/timestamp written to the DB or embedded in a generated ID. | `PYTHON_STANDARDS.md` § Datetime |
 | B5 | Never return `str(exc)` to an API client. | `PYTHON_STANDARDS.md` § Service Layer Exception Handling |
 | B6 | `except Exception` only at the outermost handler/worker boundary. | `PYTHON_STANDARDS.md` § Exception Handling |
 | B7 | For every new/changed SQL path, verify identifiers against the authoritative schema/view/function definition and execute it in a real-database integration test. Mocked route/service tests, lint, and compilation do not validate SQL contracts. | `COMMON_CODING_STANDARDS.md` § Verify Every Cross-Boundary Contract at Its Owning Layer; `TESTING_STANDARDS.md` § New or Changed Queries Must Execute Against the Real Schema |
+
+## FastAPI / SQLAlchemy-Only Backend Checks
+
+These only apply to projects that actually use FastAPI and/or SQLAlchemy — skip them for
+a Flask project with no SQLAlchemy models (e.g. a repository pattern over raw SQL). Full
+rules live in `FASTAPI_STANDARDS.md`:
+
+| # | Rule | Full rule |
+|---|---|---|
+| B1 | Async stays async throughout — no sync blocking calls inside async routes. | `FASTAPI_STANDARDS.md` § Async Throughout |
+| B2 | Never access model attributes not defined in the model. | `FASTAPI_STANDARDS.md` § Never Access Undefined Model Attributes |
 
 ## TypeScript / React Web Checks
 

@@ -5,7 +5,9 @@ Read this at session start. Keep it short; detailed review checks live in
 
 ## Required Behavior
 
-Rules are numbered for stable reference in review notes. Do not renumber when adding.
+This is the canonical, stable-numbered `G`-rule table. `CODEX_REVIEW_CHECKLIST.md` links
+here rather than redefining its own `G` numbers, so a rule number means the same thing in
+both files. Do not renumber when adding — append a new `G` instead.
 
 | # | Rule |
 |---|---|
