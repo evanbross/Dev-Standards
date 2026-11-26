@@ -24,22 +24,38 @@ interactive element — it confuses users and hides missing functionality.
 
 ---
 
-## StrictMode `useEffect` Guard
+## StrictMode Mutations — Prefer Event Handlers; Guard Idempotency at the Boundary
 
-Any `useEffect` that calls a mutating API (POST/PATCH/DELETE) must be guarded with a
-`useRef(false)` flag set before the call and checked at the top:
+A `useRef` guard only solves "StrictMode double-invokes this effect in development." It
+does not solve the real production risk: a remount (the ref re-initializes on every
+mount) or a second client (another tab, another device, a second user) can still trigger
+the same mutation twice. Treat the ref guard below as a dev-mode convenience, not a
+correctness mechanism.
+
+- **Prefer triggering a mutation from a user-initiated event handler** (click, submit)
+  over a `useEffect`. An effect re-runs on remounts and dependency changes in ways a
+  click does not, and most mutations have a natural user action to attach to.
+- **If an effect genuinely must write** (e.g. syncing a derived value on mount), define
+  idempotency at the boundary the mutation actually hits — a unique constraint, an
+  upsert, a dedupe key the server enforces — so a duplicate call is a no-op there instead
+  of relying on the client to prevent it perfectly. Make the effect's setup and its
+  cleanup safe to run more than once.
+- A component-local `useRef` flag cannot make a mutation safe across remounts or other
+  clients; it only suppresses the specific double-invoke StrictMode produces in dev:
 
 ```js
 const hasFired = useRef(false);
 useEffect(() => {
   if (hasFired.current) return;
   hasFired.current = true;
-  // ... mutating call
+  // ... mutating call — still relies on server-side idempotency for real safety
 }, []);
 ```
 
 React 18 StrictMode double-invokes effects in development, so an unguarded mutating
-effect will fire twice and produce duplicate writes.
+effect will fire twice there even when the boundary is idempotent and the risk above
+doesn't apply — keep the ref guard to avoid noisy duplicate dev-mode calls, but don't
+treat it as the fix.
 
 ---
 
@@ -94,6 +110,37 @@ function handleRunNow() {
   pollRef.current = setInterval(pollStatus, 1500);
 }
 ```
+
+---
+
+## Guard Async Completions By Request Identity
+
+Pairs with the timer-ref rule above — both exist because an in-flight async operation can
+outlive the state it was meant to update. Any state update inside a `.then()`/`.catch()`
+(or the resolution of an `async` function) that follows a `fetch`/mutation call must check
+that the request is still the one the caller cares about before writing state — on
+**both the success path and the error path**, not only in a `finally` that clears a
+loading flag. When two requests for the same logical resource can be in flight at once (a
+revision bump re-fetching while an older fetch is still pending, a rapid double-click),
+the one that resolves later should win, regardless of which one resolves last:
+
+```js
+const request = fetch(url).then(/* ... */);
+currentRequestRef.current = request;
+request
+  .then((data) => {
+    if (currentRequestRef.current !== request) return;  // a newer request superseded this one
+    setData(data);
+  })
+  .catch((err) => {
+    if (currentRequestRef.current !== request) return;  // same check on the error path
+    setError(err);
+  });
+```
+
+A check that only guards the loading-flag cleanup (e.g. in a shared `finally`) does not
+protect `setData`/`setError` themselves — add the identity check at each state-writing
+call site.
 
 ---
 

@@ -38,24 +38,43 @@ If a route needs to release the connection before slow I/O (e.g. an AI call), en
 `with get_repos()` block before that work begins instead of calling `.close()` manually —
 do the DB reads inside the block, then run the slow call after it exits.
 
-**Background threads** — use an explicit `try/finally` since they hold the connection
-for the duration of the thread and need custom error handling:
+**Background threads** — use an explicit `try/finally`, and release the connection around
+slow external I/O the same way a route handler would (see `PYTHON_STANDARDS.md` §
+Connection Lifetime vs. Slow External Work). A background thread still holds a pooled
+connection, so the same exhaustion risk applies — "it's a thread, not a request" is not an
+exemption:
 
 ```python
 def _run_scan() -> None:
     repos = open_repositories(config.DATABASE_URL)
     try:
-        # ... scanning work ...
+        candidates = repos["jobs"].claim_pending(limit=20)  # atomic claim — see below
         repos["conn"].commit()
     except Exception as exc:
         repos["conn"].rollback()
         logger.exception("Scan failed")
+        return
     finally:
         repos["conn"].close()
+
+    for job in candidates:
+        result = scrape(job["url"])          # slow external I/O — no connection held here
+        _record_scan_outcome(job["id"], result)  # reopens a connection only to write the outcome
 ```
 
 Do NOT rely on the happy path to close the connection, and do NOT import or call
 a private `_get_repos` function from route handlers — it bypasses the lifecycle guarantee.
+
+**Claiming a row and delivering on it are separate writes.** A claim (marking a row so no
+other worker/tick picks it up) must commit before any slow or uncertain external call
+(email, third-party API) — see `PYTHON_STANDARDS.md` § SELECT-then-Write Race Conditions
+for making the claim itself atomic. But a committed claim does not mean the external call
+happened: if it fails, or the process dies between the two, the row is claimed and the
+outcome is unknown. Record the delivery outcome in its own write, after the external call
+returns, so a crash between claim and delivery leaves a claimed-but-undelivered row that a
+reconciliation pass (or the next tick) can detect — instead of a claim silently standing in
+for "delivered." See `TESTING_STANDARDS.md` § Failure Ordering and Uncertain Delivery for
+the test this requires.
 
 ---
 
@@ -75,9 +94,14 @@ or back) a change confined to the infrastructure layer, not scattered through ap
 - **No provider-specific leakage into business logic**: things like `psycopg2` connection
   strings, SQLite pragmas, or cloud-provider SDK calls belong in the infrastructure/config
   layer, not in services or routers.
-- **Abstract base or protocol**: define an abstract base class or `Protocol` for each
-  repository so that a mock, in-memory, or alternative-provider implementation can be
-  substituted without changing callers.
+- **Abstract base or protocol where substitution is real**: define an abstract base class
+  or `Protocol` when a repository actually needs more than one implementation — swapping
+  providers, a test double standing in for infrastructure that can't run in CI, or an
+  explicit multi-backend boundary. Don't add one by default for a repository with a single
+  implementation and no concrete plan for another — that's the speculative abstraction
+  `COMMON_CODING_STANDARDS.md` § No Speculative Abstractions says to avoid. The
+  SQLite → Postgres provider swap this section is written for is itself a real,
+  concrete substitution need, which is why it's listed here.
 
 This applies to every persistence store, not just the primary DB — caches (Redis), object
 storage, and search indexes included.

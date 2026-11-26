@@ -12,6 +12,8 @@ Load this checklist when any of these are true:
 - The task involved debugging failed Codex output.
 - The task involved imports, package layout, route wiring, model fields, or API contracts.
 - The final answer will say something was tested or verified.
+- The task is a **read-only code review or dependency/advisory audit** — no files changed,
+  but the output will be treated as a verified assessment of the codebase.
 
 ## General Behavior Rules
 
@@ -122,6 +124,13 @@ third-party APIs). For each one, confirm both:
 Do not count a mock that replaces the producer as contract verification. If a mismatch
 was found during the task, grep for the same assumption and audit sibling consumers,
 including pre-existing ones; document any remediation that must be deferred.
+
+### C7. Check Failure Ordering and Side-Effect Uncertainty
+
+For any code path with more than one async/network call that can be in flight for the
+same key, or a DB write followed by a separate external side effect (email, third-party
+API), confirm there is a test for the out-of-order/failure-between-the-two case, not just
+the happy path. See `TESTING_STANDARDS.md` § Failure Ordering and Uncertain Delivery.
 
 ## Known Codex Risk Patterns
 

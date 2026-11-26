@@ -133,6 +133,25 @@ When a new third-party package (or package extra) is first imported in a project
 - **Node**: `package.json` `dependencies` (runtime) or `devDependencies` (tooling/test-only). Do not add runtime packages under `devDependencies`.
 - **Dev-only packages**: keep in a separate manifest (`requirements-dev.txt`, `devDependencies`) so they do not bloat production installs.
 
+**Scheduled advisory scans, not just on-change ones.** Run a locked-dependency audit
+(`uv audit --locked`, `npm audit`, etc.) on a recurring schedule in addition to any
+change-triggered run — a new advisory can be published against a dependency nobody
+touched. When triaging results:
+
+- Record whether each finding is reachable from a runtime path or only from dev/tooling
+  code — a vulnerable formatter used only at commit time is not the same risk as a
+  vulnerable TLS library in the request path.
+- Distinguish a scanner failure (tool crashed, couldn't reach the advisory feed, hit a
+  rate limit) from a clean "no advisories found" result. A CI job that treats both as
+  "pass" hides outages in the audit tooling itself, not just in the dependencies.
+- Any advisory deliberately left unresolved (no compatible fix yet, low reachability,
+  etc.) must be recorded with an owner and a review date — not silently dropped via
+  `allow_failure` with nothing tracking it.
+
+Local path dependencies, vendored packages, and container base images carry the same
+supply-chain risk as registry packages but don't show up in a manifest scan — see
+`INFRASTRUCTURE_STANDARDS.md` § Dependency and Image Provenance for how to track those.
+
 ---
 
 ## Do Not Cut Corners

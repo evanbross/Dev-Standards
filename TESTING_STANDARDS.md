@@ -136,3 +136,41 @@ fix is `def __init__(self, *args, **kwargs): pass` when the fake doesn't use the
    and add `"x"` to every matching fake repos dict.
 2. If you change a constructor signature that is monkeypatched in tests, grep for the
    class name in the test directory and update any fakes.
+
+---
+
+## Failure Ordering and Uncertain Delivery
+
+### Out-of-Order Completion
+
+Any code path that can have more than one async/network call in flight for the same
+logical key (a revision-triggered refetch while an older fetch is still pending, a
+double-click, two retried requests racing) must have a test where the responses settle
+**out of order** — the older request resolving last. Assert that a stale response cannot
+overwrite state a newer response already set, on both the success path and the error
+path. See `REACT_STANDARDS.md` § Guard Async Completions By Request Identity for the
+pattern this tests.
+
+### A Database Write Plus a Separate External Side Effect
+
+Any path that performs a DB write (claiming a task, marking a day's digest as sent) and
+then a separate, uncertain external side effect (sending an email, calling a third-party
+API) must have a test for the failure-between-the-two case: the external call raises, or
+the process exits, after the DB write commits but before the side effect completes.
+
+- Require the code under test to have an explicit, stated policy for this case — a
+  bounded retry for known-transient failures, or an explicit "claimed but undelivered"
+  state a reconciliation pass can detect — not silence. A test that only exercises "the
+  happy path, then the already-claimed path" does not cover this.
+- A retry must not be allowed to duplicate a side effect that already happened; if the
+  external outcome is ambiguous (e.g. the send timed out but may have gone through),
+  the test should assert the code's documented choice for that ambiguity rather than
+  assuming at-most-once or at-least-once by default.
+
+### Migrations: Empty Init and a Representative Upgrade
+
+A migration test suite must cover both: initializing a fresh, empty schema, **and**
+upgrading from a representative prior-version schema populated with data. Run both using
+the same database role the running application actually connects as — not a superuser —
+so a privilege gap (missing grant on a new table/sequence) surfaces in the test instead of
+in production.
